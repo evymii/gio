@@ -8,7 +8,8 @@ struct GiosApp: App {
         WindowGroup {
             RootView()
                 .environment(env)
-                .tint(Theme.Colors.accent)
+                .tint(Theme.Colors.yellow)
+                .preferredColorScheme(.dark)
         }
     }
 }

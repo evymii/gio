@@ -1,7 +1,7 @@
 import CoreLocation
 import SwiftUI
 
-/// Every spot on campus, filterable by type, nearest first. Tap to check in.
+/// Campus guide: a badge grid to filter by type, then stacked spot cards (nearest first).
 struct SpotsListView: View {
     @Environment(AppEnvironment.self) private var env
     @State private var spots: [Spot]?
@@ -14,63 +14,60 @@ struct SpotsListView: View {
     private func distance(_ s: Spot) -> Double? {
         env.location.location?.distance(from: CLLocation(latitude: s.lat, longitude: s.lng))
     }
-
     private var sorted: [Spot] {
         (spots ?? []).sorted { (distance($0) ?? .infinity, $0.name) < (distance($1) ?? .infinity, $1.name) }
     }
 
     var body: some View {
-        List {
-            Section {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: Theme.Spacing.s) {
-                        chip(nil, "All")
-                        ForEach(Self.types, id: \.self) { chip($0, $0.capitalized) }
-                    }
-                    .padding(.vertical, 2)
-                }
-                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                .listRowBackground(Color.clear)
-            }
-            if spots != nil {
-                Section("\(sorted.count) spots") {
-                    ForEach(sorted) { s in
-                        Button { selected = s } label: {
-                            HStack(spacing: Theme.Spacing.s + 4) {
-                                SpotIcon(type: s.type)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(s.name).font(Theme.Fonts.body.weight(.semibold)).foregroundStyle(Theme.Colors.text)
-                                    Text([formatDistance(distance(s)), "+\(s.rewardXp) XP"].filter { !$0.isEmpty }.joined(separator: " · "))
-                                        .font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.Colors.textSecondary)
-                            }
-                        }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                StackedTitle(primary: "Campus", secondary: "Guide", size: 44).appear()
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 14) {
+                    filterBadge(nil, icon: "square.grid.2x2.fill", color: .white, label: "All")
+                    ForEach(Self.types, id: \.self) { t in
+                        let s = Theme.spotStyle(t)
+                        filterBadge(t, icon: s.icon, color: s.color, label: t.capitalized)
                     }
                 }
-            } else {
-                ProgressView().frame(maxWidth: .infinity)
+                .appear(delay: 0.05)
+
+                if spots != nil {
+                    SectionHeader(type?.capitalized ?? "All spots", subtitle: "\(sorted.count) places")
+                    if sorted.isEmpty {
+                        Card { Text("No spots of this type yet.").font(Theme.Fonts.body).foregroundStyle(Theme.Colors.textSecondary) }
+                    }
+                    CardStack(items: sorted) { _, s in
+                        Button { selected = s } label: { SpotCard(spot: s, distance: distance(s)) }
+                            .buttonStyle(PressableStyle())
+                    }
+                    .id(type) // re-run the stagger when the filter changes
+                } else {
+                    ProgressView().tint(Theme.Colors.yellow).frame(maxWidth: .infinity)
+                }
             }
+            .padding(Theme.Spacing.m)
         }
-        .navigationTitle("Spots")
+        .pageBackground()
+        .navigationBarTitleDisplayMode(.inline)
         .task(id: type) { await load() }
         .refreshable { await load() }
-        .sheet(item: $selected) { spot in
-            SpotSheet(spot: spot) { Task { await load() } }
-                .presentationDetents([.height(320), .medium])
-        }
+        .sheet(item: $selected) { spot in SpotSheet(spot: spot) { Task { await load() } } }
         .errorAlert(message: $error)
     }
 
-    private func chip(_ value: String?, _ label: String) -> some View {
-        Button { type = value } label: {
-            Text(label).font(Theme.Fonts.caption.weight(.semibold))
-                .padding(.horizontal, 12).padding(.vertical, 7)
-                .foregroundStyle(type == value ? .white : Theme.Colors.text)
-                .background(type == value ? Theme.Colors.accent : Theme.Colors.surface, in: Capsule())
+    private func filterBadge(_ value: String?, icon: String, color: Color, label: String) -> some View {
+        Button { withAnimation(.spring(response: 0.35)) { type = value } } label: {
+            VStack(spacing: 6) {
+                LineBadge(icon: icon, color: color, size: 64)
+                    .overlay(Circle().strokeBorder(.white, lineWidth: type == value ? 3 : 0).padding(-5))
+                    .scaleEffect(type == value ? 0.92 : 1)
+                    .opacity(type == nil || type == value ? 1 : 0.45)
+                Text(label).font(Theme.Fonts.micro).foregroundStyle(type == value ? Theme.Colors.text : Theme.Colors.textSecondary)
+            }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(type == value ? .isSelected : [])
     }
 
     private func load() async {

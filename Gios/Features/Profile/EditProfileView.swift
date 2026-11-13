@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Change your name and avatar (free avatars + any you've unlocked).
+/// Change your name and pick an avatar from a grid of badges ("Choose your look").
 struct EditProfileView: View {
     @Environment(AppEnvironment.self) private var env
     @Environment(\.dismiss) private var dismiss
@@ -18,43 +18,44 @@ struct EditProfileView: View {
     private var valid: Bool { (2...30).contains(trimmed.count) }
 
     var body: some View {
-        Form {
-            Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 26) {
+                StackedTitle(primary: "Choose", secondary: "Your Look", size: 44).appear()
                 HStack {
                     Spacer()
-                    AvatarView(avatar: avatar, name: trimmed.isEmpty ? "?" : trimmed, size: 96)
+                    AvatarView(avatar: avatar, name: trimmed.isEmpty ? "?" : trimmed, size: 120)
+                        .animation(.spring(response: 0.35, dampingFraction: 0.6), value: avatar)
                     Spacer()
                 }
-                .listRowBackground(Color.clear)
-            }
-            Section {
-                TextField("Name", text: $name).textContentType(.name)
-            } header: { Text("Name") } footer: {
-                if !valid { Text("2–30 characters").foregroundStyle(Theme.Colors.danger) }
-            }
-            Section("Avatar") {
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: Theme.Spacing.m) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 12) {
                     ForEach(AvatarView.free + unlocked, id: \.self) { id in
                         Button { avatar = id } label: {
-                            AvatarView(avatar: id, name: trimmed.isEmpty ? "?" : trimmed, size: 54)
-                                .overlay(Circle().stroke(avatar == id ? Theme.Colors.accent : .clear, lineWidth: 3).padding(-4))
+                            AvatarView(avatar: id, name: trimmed.isEmpty ? "?" : trimmed, size: 70)
+                                .overlay(Circle().strokeBorder(.white, lineWidth: avatar == id ? 4 : 0).padding(-6))
+                                .scaleEffect(avatar == id ? 0.9 : 1)
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(id == avatar ? "\(id), selected" : id)
+                        .buttonStyle(PressableStyle())
+                        .accessibilityLabel(avatar == id ? "\(id), selected" : id)
                     }
                 }
-                .padding(.vertical, Theme.Spacing.s)
-            }
-        }
-        .navigationTitle("Edit profile")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                if saving { ProgressView() } else {
-                    Button("Save") { Task { await save() } }.disabled(!changed || !valid)
+                .animation(.spring(response: 0.3), value: avatar)
+                .sensoryFeedback(.selection, trigger: avatar)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    FieldBox(icon: "person.fill") { TextField("Name", text: $name).textContentType(.name) }
+                    if !valid { Text("2–30 characters").font(Theme.Fonts.micro).foregroundStyle(Theme.Colors.red) }
                 }
+                Button { Task { await save() } } label: {
+                    if saving { ProgressView().tint(Theme.Colors.ink) } else { Text("Save") }
+                }
+                .buttonStyle(PillButtonStyle())
+                .disabled(!changed || !valid || saving)
             }
+            .padding(Theme.Spacing.m)
         }
+        .scrollDismissesKeyboard(.interactively)
+        .pageBackground()
+        .navigationBarTitleDisplayMode(.inline)
         .task {
             if let me = env.session.me { name = me.name; avatar = me.avatar }
             let inv = (try? await env.api.inventory()) ?? []
@@ -67,8 +68,7 @@ struct EditProfileView: View {
         saving = true
         defer { saving = false }
         do {
-            let me = try await env.api.updateMe(name: trimmed, avatar: avatar)
-            env.session.update(me)
+            env.session.update(try await env.api.updateMe(name: trimmed, avatar: avatar))
             dismiss()
         } catch { self.error = error.localizedDescription }
     }

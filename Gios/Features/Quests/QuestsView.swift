@@ -1,73 +1,81 @@
 import SwiftUI
 
-/// Every active quest with your progress: ready to claim, in progress, done.
+/// All quests as habit pills, filterable; tap a ready one to claim.
 struct QuestsView: View {
+    enum Filter: String, CaseIterable { case all = "All", ready = "Ready", active = "Active", done = "Done" }
+
     @Environment(AppEnvironment.self) private var env
     @State private var quests: [Quest]?
+    @State private var filter: Filter = .all
     @State private var busyId: String?
-    @State private var message: String?
+    @State private var claimed: ClaimResult?
     @State private var error: String?
 
-    var body: some View {
-        List {
-            if let quests {
-                section("Ready to claim", quests.filter(\.isClaimable))
-                section("In progress", quests.filter { $0.status == "in_progress" })
-                section("Completed", quests.filter(\.isClaimed))
-            } else {
-                ProgressView().frame(maxWidth: .infinity)
-            }
+    private var shown: [Quest] {
+        let q = quests ?? []
+        switch filter {
+        case .all: return q.sorted { order($0) < order($1) }
+        case .ready: return q.filter(\.isClaimable)
+        case .active: return q.filter { $0.status == "in_progress" }
+        case .done: return q.filter(\.isClaimed)
         }
-        .navigationTitle("Quests")
+    }
+    private func order(_ q: Quest) -> Int { q.isClaimable ? 0 : (q.isClaimed ? 2 : 1) }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                HStack(alignment: .top) {
+                    StackedTitle(primary: "Quests", secondary: "Goals & rewards", size: 40)
+                    Spacer()
+                    if let quests {
+                        LineBadge("\(quests.filter(\.isClaimable).count)", color: Theme.Colors.yellow, size: 44)
+                            .accessibilityLabel("\(quests.filter(\.isClaimable).count) ready to claim")
+                    }
+                }
+                .appear()
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 4) {
+                        ForEach(Filter.allCases, id: \.self) { f in Chip(title: f.rawValue, selected: filter == f) { filter = f } }
+                    }
+                }
+                if quests == nil {
+                    ProgressView().tint(Theme.Colors.yellow).frame(maxWidth: .infinity).padding(.top, 40)
+                } else if shown.isEmpty {
+                    PillRow(title: "Nothing here", value: "0", color: Theme.Colors.surface2, filled: false)
+                }
+                VStack(spacing: 8) {
+                    ForEach(Array(shown.enumerated()), id: \.element.id) { i, q in
+                        Button { if q.isClaimable { Task { await claim(q) } } } label: {
+                            VStack(alignment: .leading, spacing: 6) {
+                                QuestPill(quest: q, index: i, busy: busyId == q.id)
+                                HStack(spacing: 6) {
+                                    Text(q.description).font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
+                                    Spacer()
+                                    Tag(text: "+\(q.rewardXp) XP")
+                                    if let r = q.reward { Tag(text: r.name, tint: Theme.Colors.lavender) }
+                                }
+                                .padding(.horizontal, 12).padding(.bottom, 6)
+                            }
+                        }
+                        .buttonStyle(PressableStyle())
+                        .disabled(!q.isClaimable)
+                        .scrollFade()
+                    }
+                }
+                .animation(.spring(response: 0.4, dampingFraction: 0.85), value: filter)
+                .animation(.spring(response: 0.4, dampingFraction: 0.85), value: quests?.map(\.status))
+            }
+            .padding(Theme.Spacing.m)
+        }
+        .pageBackground()
+        .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .refreshable { await load() }
-        .alert("Quest claimed", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
-            Button("Nice!", role: .cancel) {}
-        } message: { Text(message ?? "") }
+        .sheet(item: Binding(get: { claimed.map(ClaimBox.init) }, set: { if $0 == nil { claimed = nil } })) { box in
+            ClaimedSheet(result: box.result)
+        }
         .errorAlert(message: $error)
-    }
-
-    @ViewBuilder
-    private func section(_ title: String, _ items: [Quest]) -> some View {
-        if !items.isEmpty {
-            Section(title) {
-                ForEach(items) { q in row(q) }
-            }
-        }
-    }
-
-    private func row(_ q: Quest) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top, spacing: Theme.Spacing.s + 4) {
-                Image(systemName: q.reward?.icon ?? "flag.fill")
-                    .font(.title3).foregroundStyle(q.isClaimed ? Theme.Colors.textSecondary : Theme.Colors.xp).frame(width: 28)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(q.title).font(Theme.Fonts.body.weight(.semibold))
-                    Text(q.description).font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
-                    HStack(spacing: 6) {
-                        Tag(text: "+\(q.rewardXp) XP", tint: Theme.Colors.xp)
-                        if let r = q.reward { Tag(text: r.name) }
-                    }
-                    .padding(.top, 2)
-                }
-                Spacer()
-                if q.isClaimable {
-                    if busyId == q.id { ProgressView() } else {
-                        Button("Claim") { Task { await claim(q) } }
-                            .buttonStyle(.borderedProminent).tint(Theme.Colors.xp).controlSize(.small)
-                    }
-                } else if q.isClaimed {
-                    Image(systemName: "checkmark.seal.fill").foregroundStyle(Theme.Colors.online).accessibilityLabel("Claimed")
-                } else {
-                    Text("\(q.progress)/\(q.goal.target)").font(Theme.Fonts.caption.monospacedDigit())
-                        .foregroundStyle(Theme.Colors.textSecondary)
-                }
-            }
-            if !q.isClaimed {
-                ProgressBar(value: q.fraction, tint: q.isClaimable ? Theme.Colors.xp : Theme.Colors.accent, height: 6)
-            }
-        }
-        .padding(.vertical, 4)
     }
 
     private func load() async {
@@ -80,12 +88,39 @@ struct QuestsView: View {
         busyId = q.id
         defer { busyId = nil }
         do {
-            let r = try await env.claim(q)
-            var lines = ["+\(r.xpAwarded) XP"]
-            if let reward = r.reward { lines.append("\(reward.name) added to your rewards") }
-            if r.user.leveledUp { lines.append("Level up! You're now level \(r.user.level).") }
-            message = lines.joined(separator: "\n")
+            claimed = try await env.claim(q)
             await load()
         } catch { self.error = error.localizedDescription }
+    }
+}
+
+private struct ClaimBox: Identifiable { let result: ClaimResult; var id: Int { result.user.xp } }
+
+/// Celebration after claiming a quest.
+private struct ClaimedSheet: View {
+    let result: ClaimResult
+    @Environment(\.dismiss) private var dismiss
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.l) {
+            HStack {
+                LineBadge(icon: result.reward?.icon ?? "star.fill", color: Theme.Colors.ink, size: 64, foreground: Theme.Colors.yellow)
+                Spacer()
+                CircleButton(systemName: "xmark", size: 48, fill: Theme.Colors.ink.opacity(0.1), foreground: Theme.Colors.ink) { dismiss() }
+            }
+            Spacer()
+            Text("+\(result.xpAwarded)").font(Theme.Fonts.number(110, weight: .regular)).tracking(-5)
+            StackedTitle(primary: "XP earned", secondary: result.reward.map { "\($0.name) unlocked" } ?? "Quest complete",
+                         size: 36, primaryColor: Theme.Colors.ink, secondaryColor: Theme.Colors.ink.opacity(0.5))
+            if result.user.leveledUp {
+                Tag(text: "LEVEL UP → \(result.user.level)", tint: Theme.Colors.ink, filled: true)
+            }
+            Button("Nice") { dismiss() }.buttonStyle(PillButtonStyle(fill: Theme.Colors.ink))
+        }
+        .foregroundStyle(Theme.Colors.ink)
+        .padding(Theme.Spacing.l)
+        .presentationDetents([.medium])
+        .presentationCornerRadius(40)
+        .presentationBackground(Theme.Colors.yellow)
+        .sensoryFeedback(.success, trigger: true)
     }
 }

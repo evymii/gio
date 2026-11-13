@@ -1,54 +1,78 @@
 import SwiftUI
 
-/// All rewards: what you own (with quantity) and what's still locked.
+/// Pictogram reward tile (signage style). Locked tiles are dark with a lock.
+struct RewardTile: View {
+    let reward: Reward
+    let owned: Bool
+    var qty = 1
+    var color: Color
+
+    var body: some View {
+        let bg = owned ? color : Theme.Colors.surface
+        let fg = owned ? Theme.foreground(on: color) : Theme.Colors.textSecondary
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top) {
+                Image(systemName: owned ? reward.icon : "lock.fill").font(.system(size: 40, weight: .bold))
+                Spacer()
+                if owned && qty > 1 { Text("×\(qty)").font(Theme.Fonts.bold(16)) }
+            }
+            Spacer(minLength: 18)
+            Text(reward.name).font(Theme.Fonts.display(20)).tracking(-0.5).lineLimit(2).minimumScaleFactor(0.8)
+            Text(reward.type.uppercased()).font(Theme.Fonts.micro).opacity(0.6)
+        }
+        .foregroundStyle(fg)
+        .padding(18)
+        .frame(maxWidth: .infinity, minHeight: 170, alignment: .topLeading)
+        .background(bg, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .overlay {
+            if !owned { RoundedRectangle(cornerRadius: 26, style: .continuous).strokeBorder(Theme.Colors.line, lineWidth: 1.5) }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(reward.name), \(reward.type), \(owned ? "earned" : "locked")")
+    }
+}
+
+/// All rewards: earned (colorful) and locked (dark).
 struct RewardsView: View {
     @Environment(AppEnvironment.self) private var env
     @State private var catalog: [Reward]?
     @State private var owned: [String: InventoryEntry] = [:]
+    @State private var selected: Reward?
     @State private var error: String?
 
     var body: some View {
-        List {
-            if let catalog {
-                let mine = catalog.filter { owned[$0.id] != nil }
-                let locked = catalog.filter { owned[$0.id] == nil }
-                Section {
-                    if mine.isEmpty { Text("Complete quests to earn your first reward.").foregroundStyle(Theme.Colors.textSecondary) }
-                    ForEach(mine) { r in row(r, entry: owned[r.id]) }
-                } header: { Text("Yours (\(mine.count))") }
-                if !locked.isEmpty {
-                    Section("Locked") { ForEach(locked) { r in row(r, entry: nil) } }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                StackedTitle(primary: "Rewards", secondary: "\(owned.count) of \(catalog?.count ?? 0) earned", size: 40).appear()
+                if let catalog {
+                    let sorted = catalog.sorted { (owned[$0.id] == nil ? 1 : 0, $0.name) < (owned[$1.id] == nil ? 1 : 0, $1.name) }
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                        ForEach(Array(sorted.enumerated()), id: \.element.id) { i, r in
+                            Button { selected = r } label: {
+                                RewardTile(reward: r, owned: owned[r.id] != nil, qty: owned[r.id]?.qty ?? 0, color: Theme.Colors.cycled(i + 2))
+                            }
+                            .buttonStyle(PressableStyle())
+                            .appear(delay: Double(i) * 0.04)
+                        }
+                    }
+                } else {
+                    ProgressView().tint(Theme.Colors.yellow).frame(maxWidth: .infinity).padding(.top, 40)
                 }
-            } else {
-                ProgressView().frame(maxWidth: .infinity)
             }
+            .padding(Theme.Spacing.m)
         }
-        .navigationTitle("Rewards")
+        .pageBackground()
+        .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .refreshable { await load() }
-        .errorAlert(message: $error)
-    }
-
-    private func row(_ r: Reward, entry: InventoryEntry?) -> some View {
-        HStack(spacing: Theme.Spacing.s + 4) {
-            Image(systemName: entry == nil ? "lock.fill" : r.icon)
-                .font(.title3)
-                .foregroundStyle(entry == nil ? Theme.Colors.textSecondary : Theme.Colors.xp)
-                .frame(width: 32)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(r.name).font(Theme.Fonts.body.weight(.semibold))
-                Text(r.description).font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
-                if let entry {
-                    Text("Earned \(entry.claimedAt.formatted(date: .abbreviated, time: .omitted))")
-                        .font(.system(size: 11, design: .rounded)).foregroundStyle(Theme.Colors.textSecondary)
-                }
+        .alert(selected?.name ?? "", isPresented: Binding(get: { selected != nil }, set: { if !$0 { selected = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            if let s = selected {
+                Text(s.description + (owned[s.id].map { "\nEarned \($0.claimedAt.formatted(date: .abbreviated, time: .omitted))" } ?? "\nComplete its quest to unlock."))
             }
-            Spacer()
-            if let entry, entry.qty > 1 { Text("×\(entry.qty)").font(Theme.Fonts.caption.weight(.bold)) }
-            Tag(text: r.type.capitalized, tint: entry == nil ? .gray : Theme.Colors.accent)
         }
-        .opacity(entry == nil ? 0.7 : 1)
-        .accessibilityElement(children: .combine)
+        .errorAlert(message: $error)
     }
 
     private func load() async {

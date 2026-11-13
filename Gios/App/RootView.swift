@@ -15,16 +15,17 @@ struct RootView: View {
                 case .loading:
                     SplashView().transition(.opacity)
                 case .signedOut:
-                    AuthView().transition(.opacity)
+                    AuthFlow().transition(.asymmetric(insertion: .push(from: .leading), removal: .push(from: .trailing)))
                 case .signedIn:
-                    MainTabView().transition(.opacity)
+                    MainTabView().transition(.asymmetric(insertion: .push(from: .trailing), removal: .push(from: .leading)))
                 case let .offline(reason):
                     OfflineView(reason: reason) { Task { await env.session.restore() } }
                 }
             }
         }
         .animation(.easeInOut(duration: 0.3), value: splashDone)
-        .animation(.easeInOut(duration: 0.3), value: stateKey)
+        .animation(.spring(response: 0.5, dampingFraction: 0.9), value: stateKey)
+        .background(Theme.Colors.background.ignoresSafeArea())
         .task {
             async let restore: Void = env.session.restore()
             try? await Task.sleep(for: .seconds(1.2)) // let the splash breathe
@@ -56,12 +57,14 @@ private struct OfflineView: View {
     let reason: String
     let retry: () -> Void
     var body: some View {
-        ContentUnavailableView {
-            Label("Can't reach Gios", systemImage: "wifi.slash")
-        } description: {
-            Text(reason)
-        } actions: {
-            Button("Try again", action: retry).buttonStyle(.borderedProminent)
+        VStack(alignment: .leading, spacing: Theme.Spacing.l) {
+            Spacer()
+            LineBadge(icon: "wifi.slash", color: Theme.Colors.red, size: 72)
+            StackedTitle(primary: "Can't reach", secondary: "the campus", size: 44)
+            Text(reason).font(Theme.Fonts.body).foregroundStyle(Theme.Colors.textSecondary)
+            Spacer()
+            Button("Try again", action: retry).buttonStyle(PillButtonStyle())
         }
+        .padding(Theme.Spacing.l)
     }
 }

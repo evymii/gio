@@ -1,238 +1,304 @@
 import SwiftUI
 
-/// Home: level, event, stats, nearby spots, quests, friends online, weekly rank.
+/// Home: level, progress arc, event, nearby spots (stacked cards), quests (pills), friends, rank.
 struct DashboardView: View {
     @Environment(AppEnvironment.self) private var env
+    @Environment(\.selectTab) private var selectTab
     @State private var model = DashboardViewModel()
+    @State private var selected: Spot?
 
     var body: some View {
         Group {
             switch model.state {
             case .loading:
-                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                ProgressView().tint(Theme.Colors.yellow).frame(maxWidth: .infinity, maxHeight: .infinity)
             case let .failed(message):
-                ContentUnavailableView {
-                    Label("Couldn't load your dashboard", systemImage: "exclamationmark.triangle")
-                } description: { Text(message) } actions: {
-                    Button("Try again") { Task { await model.load(env) } }
+                VStack(alignment: .leading, spacing: Theme.Spacing.l) {
+                    StackedTitle(primary: "Couldn't load", secondary: "your campus", size: 40)
+                    Text(message).font(Theme.Fonts.body).foregroundStyle(Theme.Colors.textSecondary)
+                    Button("Try again") { Task { await model.load(env) } }.buttonStyle(PillButtonStyle())
                 }
+                .padding(Theme.Spacing.l)
+                .frame(maxHeight: .infinity)
             case let .loaded(d):
                 content(d)
             }
         }
-        .background(Theme.Colors.background.ignoresSafeArea())
-        .navigationTitle("Home")
+        .pageBackground()
+        .toolbar(.hidden, for: .navigationBar)
         .task { await model.load(env) }
         .refreshable { await model.load(env) }
-        // Reload once a first GPS fix arrives so "nearby" reflects where you are.
-        .onChange(of: env.location.location == nil) { _, isNil in
-            if !isNil { Task { await model.load(env) } }
+        .onChange(of: env.location.location == nil) { _, isNil in if !isNil { Task { await model.load(env) } } }
+        .sheet(item: $selected) { spot in
+            SpotSheet(spot: spot) { Task { await model.load(env) } }
         }
         .alert("Gios", isPresented: Binding(get: { model.toast != nil }, set: { if !$0 { model.toast = nil } })) {
             Button("OK", role: .cancel) {}
         } message: { Text(model.toast ?? "") }
+        .sensoryFeedback(.success, trigger: model.toast)
     }
 
     private func content(_ d: Dashboard) -> some View {
         ScrollView {
-            VStack(spacing: Theme.Spacing.m) {
-                levelCard(d)
-                if let event = d.events.first(where: \.isActive) {
-                    NavigationLink { EventsView() } label: { eventBanner(event) }.buttonStyle(.plain)
-                }
-                statsRow(d.stats)
+            VStack(alignment: .leading, spacing: 30) {
+                header(d).appear()
+                today(d).appear(delay: 0.04)
+                statTiles(d).appear(delay: 0.08)
+                actions.appear(delay: 0.1)
+                numbers(d).appear(delay: 0.12)
+                arc(d).appear(delay: 0.14)
                 if !env.location.isAuthorized { locationPrompt }
+                if let event = d.events.first(where: \.isActive) {
+                    NavigationLink { EventsView() } label: { EventCard(event: event, compact: true) }
+                        .buttonStyle(PressableStyle()).appear(delay: 0.15)
+                }
                 nearby(d.nearbySpots)
                 quests(d.quests)
-                friendsOnline(d.friendsOnline)
-                rankCard(d.leaderboard)
+                friends(d.friendsOnline)
+                rank(d.leaderboard)
             }
-            .padding(Theme.Spacing.m)
+            .padding(.horizontal, Theme.Spacing.m)
+            .padding(.top, Theme.Spacing.s)
+            .padding(.bottom, Theme.Spacing.xl)
         }
+        .scrollIndicators(.hidden)
     }
 
-    // MARK: Sections
+    // MARK: Header
 
-    private func levelCard(_ d: Dashboard) -> some View {
-        Card {
-            HStack(spacing: Theme.Spacing.m) {
-                AvatarView(avatar: d.user.avatar, name: d.user.name, size: 56)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Hi, \(d.user.name.split(separator: " ").first.map(String.init) ?? d.user.name)")
-                        .font(Theme.Fonts.title)
-                    Text(d.region.map { "You're at \($0.name)" } ?? "Explore campus to earn XP")
-                        .font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
-                }
-                Spacer()
-                VStack(spacing: 0) {
-                    Text("LVL").font(.system(size: 10, weight: .bold, design: .rounded)).foregroundStyle(Theme.Colors.textSecondary)
-                    Text("\(d.user.level)").font(Theme.Fonts.display(28)).foregroundStyle(Theme.Colors.accent)
-                }
-            }
-            ProgressBar(value: d.user.levelProgress, tint: Theme.Colors.xp, height: 10)
-            HStack {
-                Text("\(d.user.xp) XP").font(Theme.Fonts.caption.weight(.semibold))
-                Spacer()
-                Text("\(d.user.nextLevelXp - d.user.xp) XP to level \(d.user.level + 1)")
-                    .font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
-            }
-        }
-    }
-
-    private func eventBanner(_ e: GameEvent) -> some View {
-        HStack(spacing: Theme.Spacing.s + 4) {
-            Image(systemName: "sparkles").font(.title2).foregroundStyle(.white)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(e.title).font(Theme.Fonts.headline).foregroundStyle(.white)
-                Text("\(e.description) Ends \(e.endsAt.formatted(.relative(presentation: .named))).")
-                    .font(Theme.Fonts.caption).foregroundStyle(.white.opacity(0.9))
-            }
+    private func header(_ d: Dashboard) -> some View {
+        HStack(alignment: .top) {
+            StackedTitle(primary: "Hi \(d.user.name.split(separator: " ").first.map(String.init) ?? d.user.name)",
+                         secondary: Date.now.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)), size: 40)
             Spacer()
-        }
-        .padding(Theme.Spacing.m)
-        .background(LinearGradient(colors: [Color(hex: 0xE5488F), Color(hex: 0x8E6CEF)], startPoint: .leading, endPoint: .trailing),
-                    in: RoundedRectangle(cornerRadius: Theme.Radius.card))
-    }
-
-    private func statsRow(_ s: Dashboard.Stats) -> some View {
-        HStack(spacing: Theme.Spacing.s) {
-            stat("\(s.checkinsTotal)", "Check-ins", "mappin.circle.fill")
-            stat("\(s.checkinsThisWeek)", "This week", "calendar")
-            stat("\(s.uniqueSpots)", "Spots", "star.circle.fill")
-            stat("\(s.friends)", "Friends", "person.2.fill")
+            Button { selectTab(.profile) } label: { AvatarView(avatar: d.user.avatar, name: d.user.name, size: 52) }
+                .buttonStyle(PressableStyle())
+                .accessibilityLabel("Profile")
         }
     }
 
-    private func stat(_ value: String, _ label: String, _ icon: String) -> some View {
-        VStack(spacing: 4) {
-            Image(systemName: icon).foregroundStyle(Theme.Colors.accent)
-            Text(value).font(Theme.Fonts.number)
-            Text(label).font(.system(size: 11, design: .rounded)).foregroundStyle(Theme.Colors.textSecondary)
+    /// "Today" sentence built from live data.
+    private func today(_ d: Dashboard) -> some View {
+        var parts: [(String, Bool)] = [("Today you're at ", false), (d.region?.name ?? "campus", true)]
+        if d.friendsOnline.count > 0 {
+            parts += [(" with ", false), ("\(d.friendsOnline.count) friend\(d.friendsOnline.count == 1 ? "" : "s") online", true)]
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, Theme.Spacing.s + 4)
-        .background(Theme.Colors.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.control))
-        .accessibilityElement(children: .combine)
+        if let spot = d.nearbySpots.first(where: { $0.inRange == true && !$0.isOnCooldown }) {
+            parts += [(". Check in at ", false), (spot.name, true)]
+        }
+        if let q = d.quests.first(where: \.isClaimable) {
+            parts += [(" and claim ", false), (q.title, true)]
+        }
+        if let e = d.events.first(where: \.isActive) {
+            parts += [(" — ", false), ("\(e.title) ×\(e.xpMultiplier.formatted())", true)]
+        }
+        parts.append((".", false))
+        return HighlightSentence(parts: parts)
+    }
+
+    private func statTiles(_ d: Dashboard) -> some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            FolderStat(icon: "mappin.and.ellipse", value: "\(d.stats.checkinsTotal)", label: "Check-ins", color: Theme.Colors.lime)
+            FolderStat(icon: "calendar", value: "\(d.stats.checkinsThisWeek)", label: "This week", color: Theme.Colors.green)
+            FolderStat(icon: "star.fill", value: "\(d.stats.uniqueSpots)", label: "Spots found", color: Theme.Colors.coral)
+            FolderStat(icon: "person.2.fill", value: "\(d.stats.friends)", label: "Friends", color: Theme.Colors.teal)
+        }
+    }
+
+    private var actions: some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            Button { selectTab(.map) } label: { ActionTile(title: "Open\nlive map", color: .white) }
+            Button { selectTab(.friends) } label: { ActionTile(title: "Find\nfriends", color: Theme.Colors.lavender) }
+            NavigationLink { QuestsView() } label: { ActionTile(title: "Quests &\nrewards", color: Theme.Colors.yellow) }
+            NavigationLink { LeaderboardView() } label: { ActionTile(title: "Leader-\nboard", color: Theme.Colors.surface2) }
+        }
+        .buttonStyle(PressableStyle())
+    }
+
+    private func numbers(_ d: Dashboard) -> some View {
+        HStack(alignment: .lastTextBaseline) {
+            BigStat(value: "\(d.user.level)", unit: "Level", size: 72)
+            Spacer()
+            BigStat(value: "\(d.user.xp)", unit: "XP", size: 72)
+        }
+    }
+
+    private func arc(_ d: Dashboard) -> some View {
+        let questFraction = d.quests.isEmpty ? 1 : d.quests.map(\.fraction).reduce(0, +) / Double(d.quests.count)
+        let tracks: [(TrackArc.Track, String, String)] = [
+            (.init(id: "xp", fraction: d.user.levelProgress, color: Theme.Colors.yellow), "Next level", "\(d.user.nextLevelXp - d.user.xp) XP"),
+            (.init(id: "week", fraction: min(1, Double(d.stats.checkinsThisWeek) / 7), color: Theme.Colors.red), "This week", "\(d.stats.checkinsThisWeek)/7"),
+            (.init(id: "quests", fraction: questFraction, color: Theme.Colors.teal), "Quests", "\(Int(questFraction * 100))%"),
+            (.init(id: "friends", fraction: d.friendsOnline.total == 0 ? 0 : Double(d.friendsOnline.count) / Double(d.friendsOnline.total),
+                   color: Theme.Colors.lavender), "Friends on", "\(d.friendsOnline.count)/\(d.friendsOnline.total)"),
+        ]
+        return Card {
+            TrackArc(tracks: tracks.map(\.0)).frame(height: 160)
+            Divider().overlay(Theme.Colors.line)
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 14) {
+                ForEach(tracks, id: \.0.id) { t, label, value in
+                    HStack(spacing: 10) {
+                        Circle().fill(t.color).frame(width: 14, height: 14)
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(value).font(Theme.Fonts.bold(17))
+                            Text(label).font(Theme.Fonts.micro).foregroundStyle(Theme.Colors.textSecondary)
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            }
+        }
     }
 
     private var locationPrompt: some View {
-        Card {
-            Label("Turn on location", systemImage: "location.fill").font(Theme.Fonts.headline)
-            Text("Gios needs your location to find spots nearby and verify check-ins.")
-                .font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
-            Button(env.location.isDenied ? "Open Settings" : "Allow location") {
-                if env.location.isDenied, let url = URL(string: UIApplication.openSettingsURLString) {
-                    UIApplication.shared.open(url)
-                } else { env.location.requestPermission() }
+        Card(color: Theme.Colors.blue) {
+            HStack {
+                LineBadge(icon: "location.fill", color: .white, size: 44, foreground: Theme.Colors.blue)
+                Spacer()
             }
-            .buttonStyle(.borderedProminent)
+            StackedTitle(primary: "Turn on", secondary: "location", size: 30, primaryColor: .white, secondaryColor: .white.opacity(0.6))
+            Text("Needed to find spots near you and verify check-ins.").font(Theme.Fonts.caption).foregroundStyle(.white.opacity(0.8))
+            Button(env.location.isDenied ? "Open Settings" : "Allow location") {
+                if env.location.isDenied, let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                else { env.location.requestPermission() }
+            }
+            .buttonStyle(PillButtonStyle(fill: .white))
         }
     }
+
+    // MARK: Nearby
 
     private func nearby(_ spots: [Spot]) -> some View {
-        Card {
-            SectionHeader(title: "Nearby spots") { NavigationLink("See all") { SpotsListView() } }
-            if spots.isEmpty {
-                Text("No spots within 2 km.").font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
+        VStack(alignment: .leading, spacing: 14) {
+            SectionHeader(title: "Nearby", subtitle: "\(spots.count) spots") {
+                NavigationLink("See all") { SpotsListView() }
             }
-            ForEach(spots) { spot in
-                HStack(spacing: Theme.Spacing.s + 4) {
-                    SpotIcon(type: spot.type)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(spot.name).font(Theme.Fonts.body.weight(.semibold))
-                        Text("\(formatDistance(spot.distanceMeters)) · +\(spot.rewardXp) XP")
-                            .font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
-                    }
-                    Spacer()
-                    checkinButton(spot)
+            if spots.isEmpty {
+                Text("No spots within 2 km.").font(Theme.Fonts.body).foregroundStyle(Theme.Colors.textSecondary)
+            } else {
+                CardStack(items: Array(spots.prefix(4))) { _, spot in
+                    Button { selected = spot } label: { SpotCard(spot: spot, distance: spot.distanceMeters) }
+                        .buttonStyle(PressableStyle())
                 }
             }
         }
     }
 
-    @ViewBuilder
-    private func checkinButton(_ spot: Spot) -> some View {
-        if model.busySpotId == spot.id {
-            ProgressView()
-        } else if spot.isOnCooldown {
-            Label("Done", systemImage: "checkmark.circle.fill").labelStyle(.iconOnly)
-                .foregroundStyle(Theme.Colors.online).font(.title3)
-                .accessibilityLabel("Checked in recently")
-        } else if spot.inRange == true {
-            Button("Check in") { Task { await model.checkIn(spot, env: env) } }
-                .buttonStyle(.borderedProminent).controlSize(.small)
-        } else {
-            Text("Too far").font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
-        }
-    }
+    // MARK: Quests
 
     private func quests(_ quests: [Quest]) -> some View {
-        Card {
-            SectionHeader(title: "Quests") { NavigationLink("See all") { QuestsView() } }
-            if quests.isEmpty {
-                Text("All quests claimed — nice!").font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
-            }
-            ForEach(quests) { q in
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Image(systemName: q.reward?.icon ?? "flag.fill").foregroundStyle(Theme.Colors.xp)
-                        Text(q.title).font(Theme.Fonts.body.weight(.semibold))
-                        Spacer()
-                        if q.isClaimable {
-                            if model.busyQuestId == q.id { ProgressView() } else {
-                                Button("Claim") { Task { await model.claim(q, env: env) } }
-                                    .buttonStyle(.borderedProminent).tint(Theme.Colors.xp).controlSize(.small)
-                            }
-                        } else {
-                            Text("\(q.progress)/\(q.goal.target)").font(Theme.Fonts.caption.monospacedDigit())
-                                .foregroundStyle(Theme.Colors.textSecondary)
-                        }
+        VStack(alignment: .leading, spacing: 14) {
+            SectionHeader(title: "Quests", subtitle: "tap to claim") { NavigationLink("See all") { QuestsView() } }
+            VStack(spacing: 8) {
+                if quests.isEmpty {
+                    PillRow(title: "All claimed", value: "✓", color: Theme.Colors.green)
+                }
+                ForEach(Array(quests.enumerated()), id: \.element.id) { i, q in
+                    Button {
+                        if q.isClaimable { Task { await model.claim(q, env: env) } }
+                    } label: {
+                        QuestPill(quest: q, index: i, busy: model.busyQuestId == q.id)
                     }
-                    Text("\(q.description) · +\(q.rewardXp) XP").font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
-                    ProgressBar(value: q.fraction, tint: q.isClaimable ? Theme.Colors.xp : Theme.Colors.accent, height: 6)
+                    .buttonStyle(PressableStyle())
+                    .disabled(!q.isClaimable)
+                    .appear(delay: Double(i) * 0.05)
                 }
             }
         }
     }
 
-    private func friendsOnline(_ f: Dashboard.FriendsOnline) -> some View {
-        Card {
-            SectionHeader(title: "Friends online") { Text("\(f.count) of \(f.total)") }
+    // MARK: Friends
+
+    private func friends(_ f: Dashboard.FriendsOnline) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            SectionHeader(title: "Friends", subtitle: "online now") {
+                Button("\(f.count)/\(f.total)") { selectTab(.friends) }
+            }
             if f.users.isEmpty {
-                Text("No friends sharing right now.").font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
+                Card { Text("No friends sharing right now.").font(Theme.Fonts.body).foregroundStyle(Theme.Colors.textSecondary) }
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: Theme.Spacing.m) {
+                    HStack(spacing: 16) {
                         ForEach(f.users) { o in
-                            VStack(spacing: 4) {
-                                AvatarView(avatar: o.user.avatar, name: o.user.name, size: 48, online: true)
-                                Text(o.user.name).font(Theme.Fonts.caption.weight(.semibold))
-                                Text(formatDistance(o.distanceMeters)).font(.system(size: 11, design: .rounded))
-                                    .foregroundStyle(Theme.Colors.textSecondary)
+                            Button { selectTab(.map) } label: {
+                                VStack(spacing: 6) {
+                                    AvatarView(avatar: o.user.avatar, name: o.user.name, size: 64, online: true)
+                                    Text(o.user.name).font(Theme.Fonts.bold(14)).foregroundStyle(Theme.Colors.text)
+                                    Text(formatDistance(o.distanceMeters)).font(Theme.Fonts.micro).foregroundStyle(Theme.Colors.textSecondary)
+                                }
                             }
-                            .accessibilityElement(children: .combine)
+                            .buttonStyle(PressableStyle())
+                            .accessibilityLabel("\(o.user.name), \(formatDistance(o.distanceMeters)) away")
                         }
                     }
+                    .padding(.horizontal, 4)
                 }
             }
         }
     }
 
-    private func rankCard(_ r: Dashboard.Rank) -> some View {
+    // MARK: Rank
+
+    private func rank(_ r: Dashboard.Rank) -> some View {
         NavigationLink { LeaderboardView() } label: {
-            HStack(spacing: Theme.Spacing.m) {
-                Image(systemName: "trophy.fill").font(.title).foregroundStyle(Theme.Colors.xp)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("This week").font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
-                    Text(r.rank.map { "Rank #\($0)" } ?? "Not ranked yet").font(Theme.Fonts.headline)
-                    Text("\(r.score) XP earned").font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
+            Card(color: Theme.Colors.yellow) {
+                HStack {
+                    LineBadge(icon: "trophy.fill", color: Theme.Colors.ink, size: 44, foreground: Theme.Colors.yellow)
+                    Spacer()
+                    ArrowBadge()
                 }
-                Spacer()
-                Image(systemName: "chevron.right").foregroundStyle(Theme.Colors.textSecondary)
+                HStack(alignment: .lastTextBaseline) {
+                    StackedTitle(primary: "This week", secondary: "\(r.score) XP earned", size: 26,
+                                 primaryColor: Theme.Colors.ink, secondaryColor: Theme.Colors.ink.opacity(0.5))
+                    Spacer()
+                    Text(r.rank.map { "#\($0)" } ?? "–").font(Theme.Fonts.number(64, weight: .regular)).tracking(-2)
+                        .foregroundStyle(Theme.Colors.ink)
+                }
             }
-            .padding(Theme.Spacing.m)
-            .background(Theme.Colors.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.card))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableStyle())
+    }
+}
+
+/// A spot as a colorful stack card (used on Home and the spots list).
+struct SpotCard: View {
+    let spot: Spot
+    let distance: Double?
+
+    var body: some View {
+        let style = Theme.spotStyle(spot.type)
+        let parts = distanceParts(distance)
+        let status = spot.isOnCooldown ? "Checked in" : (spot.inRange == true ? "In range — check in" : spot.type.capitalized)
+        StackCard(color: style.color, title: spot.name, subtitle: "+\(spot.rewardXp) XP · \(status)",
+                  value: parts.value, unit: parts.unit,
+                  arrow: spot.isOnCooldown ? "checkmark" : (spot.inRange == true ? "arrow.up.right" : "arrow.right")) {
+            let fg = Theme.foreground(on: style.color)
+            Circle().strokeBorder(fg.opacity(0.25), lineWidth: 1.5)
+                .frame(width: 40, height: 40)
+                .overlay(Image(systemName: style.icon).font(.system(size: 17, weight: .bold)).foregroundStyle(fg))
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(spot.name), \(formatDistance(distance)), \(spot.rewardXp) XP, \(status)")
+    }
+}
+
+/// A quest as a habit-style pill.
+struct QuestPill: View {
+    let quest: Quest
+    let index: Int
+    var busy = false
+
+    var body: some View {
+        let color: Color = quest.isClaimable ? Theme.Colors.yellow : Theme.Colors.cycled(index + 3)
+        ZStack(alignment: .trailing) {
+            PillRow(title: quest.title,
+                    value: quest.isClaimable ? "Claim" : (quest.isClaimed ? "✓" : "\(quest.progress)/\(quest.goal.target)"),
+                    color: quest.isClaimed ? Theme.Colors.surface2 : color,
+                    filled: quest.isClaimable || quest.isClaimed || quest.progress > 0,
+                    struck: quest.isClaimed)
+                .opacity(busy ? 0.5 : 1)
+            if busy { ProgressView().tint(Theme.Colors.ink).padding(.trailing, 28) }
+        }
+        .accessibilityLabel("\(quest.title), \(quest.isClaimable ? "ready to claim" : "\(quest.progress) of \(quest.goal.target)")")
     }
 }
