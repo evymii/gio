@@ -63,6 +63,9 @@ describe('spots, check-ins, quests, leaderboards', () => {
     expect(claim.status).toBe(200);
     expect(claim.body.data).toMatchObject({ xpAwarded: 50, reward: { name: 'Newcomer', type: 'badge' }, user: { xp: 90 } });
     expect((await u.post(`/api/v1/quests/${first.id}/claim`)).body.error.code).toBe('ALREADY_CLAIMED');
+    // Reward avatars are locked until owned; free avatars always work.
+    expect((await u.patch('/api/v1/users/me', { avatar: 'avatar-cafe' })).status).toBe(403);
+    expect((await u.patch('/api/v1/users/me', { avatar: 'avatar-5' })).body.data.avatar).toBe('avatar-5');
     const inv = await u.get('/api/v1/inventory');
     expect(inv.body.data).toEqual([expect.objectContaining({ qty: 1, reward: expect.objectContaining({ slug: 'newcomer-badge' }) })]);
   });
