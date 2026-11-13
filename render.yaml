@@ -1,0 +1,25 @@
+# Render Blueprint — Render → New → Blueprint → pick this repo.
+services:
+  - type: web
+    name: gapi
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: LOCATION_TTL_DAYS
+        value: "7"
+      - key: JWT_SECRET
+        generateValue: true # Render creates a random secret
+      - key: MONGODB_URI
+        sync: false # secret — entered in the Render dashboard
