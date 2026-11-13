@@ -6,12 +6,18 @@ struct CampusMapView: View {
     @Environment(AppEnvironment.self) private var env
     @State private var spots: [Spot] = []
     @State private var friends: [FriendLocation] = []
+    @State private var regions: [Region] = []
     @State private var selected: Spot?
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var error: String?
 
     var body: some View {
         Map(position: $position) {
+            ForEach(regions) { r in
+                MapPolygon(coordinates: r.boundary.map(\.coordinate))
+                    .foregroundStyle(Theme.Colors.accent.opacity(0.05))
+                    .stroke(Theme.Colors.accent.opacity(0.45), style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+            }
             UserAnnotation()
             ForEach(spots) { spot in
                 MapCircle(center: spot.coordinate, radius: spot.radiusMeters)
@@ -46,6 +52,10 @@ struct CampusMapView: View {
         .navigationTitle("Map")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                NavigationLink { SpotsListView() } label: { Image(systemName: "list.bullet") }
+                    .accessibilityLabel("All spots")
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button { Task { await load() } } label: { Image(systemName: "arrow.clockwise") }
                     .accessibilityLabel("Refresh map")
@@ -56,6 +66,7 @@ struct CampusMapView: View {
             SpotSheet(spot: spot) { Task { await load() } }
                 .presentationDetents([.height(320), .medium])
         }
+        .task { regions = (try? await env.api.regions()) ?? [] }
         .task {
             // Refresh friends + spots every 30 s while the map is on screen.
             while !Task.isCancelled {

@@ -28,27 +28,41 @@ extension SectionHeader where Trailing == EmptyView {
     init(_ title: String) { self.title = title; self.trailing = EmptyView() }
 }
 
-/// Colored circle with the user's initial; color comes from the avatar id.
+/// Avatar: colored circle with the user's initial, or a special unlocked avatar.
 struct AvatarView: View {
     let avatar: String
     let name: String
     var size: CGFloat = 40
     var online: Bool? = nil
 
-    private static let palette: [UInt32] = [0x5B6CFF, 0x2E8B7A, 0xE5488F, 0xF2A93B, 0x8E6CEF, 0xE5484D, 0x3BA7F2, 0xA0673A]
+    static let palette: [UInt32] = [0x5B6CFF, 0x2E8B7A, 0xE5488F, 0xF2A93B, 0x8E6CEF, 0xE5484D, 0x3BA7F2, 0xA0673A]
+    /// Avatars unlocked through rewards (value → symbol + color).
+    static let special: [String: (symbol: String, color: UInt32)] = [
+        "avatar-cafe": ("cup.and.saucer.fill", 0xA0673A),
+    ]
+    static let free = (1...8).map { "avatar-\($0)" }
 
-    private var color: Color {
-        let n = Int(avatar.split(separator: "-").last.flatMap { Int($0) } ?? abs(avatar.hashValue))
-        return Color(hex: Self.palette[n % Self.palette.count])
+    private var style: (color: Color, symbol: String?) {
+        if let s = Self.special[avatar] { return (Color(hex: s.color), s.symbol) }
+        // Stable across launches (unlike hashValue): "avatar-3" → index 2.
+        let n = Int(avatar.split(separator: "-").last ?? "") ?? avatar.unicodeScalars.reduce(0) { $0 + Int($1.value) }
+        return (Color(hex: Self.palette[(max(n, 1) - 1) % Self.palette.count]), nil)
     }
 
     var body: some View {
+        let s = style
         Circle()
-            .fill(color.gradient)
+            .fill(s.color.gradient)
             .frame(width: size, height: size)
-            .overlay(Text(String(name.prefix(1)).uppercased())
-                .font(.system(size: size * 0.42, weight: .bold, design: .rounded))
-                .foregroundStyle(.white))
+            .overlay {
+                if let symbol = s.symbol {
+                    Image(systemName: symbol).font(.system(size: size * 0.42, weight: .semibold)).foregroundStyle(.white)
+                } else {
+                    Text(String(name.prefix(1)).uppercased())
+                        .font(.system(size: size * 0.42, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+            }
             .overlay(alignment: .bottomTrailing) {
                 if let online {
                     Circle().fill(online ? Theme.Colors.online : Color.gray)
@@ -57,6 +71,27 @@ struct AvatarView: View {
                 }
             }
             .accessibilityHidden(true)
+    }
+}
+
+/// Small rounded tag (reward type, spot type, status).
+struct Tag: View {
+    let text: String
+    var tint: Color = Theme.Colors.accent
+    var body: some View {
+        Text(text).font(.system(size: 11, weight: .semibold, design: .rounded))
+            .padding(.horizontal, 8).padding(.vertical, 3)
+            .foregroundStyle(tint)
+            .background(tint.opacity(0.14), in: Capsule())
+    }
+}
+
+/// Shared error alert binding.
+extension View {
+    func errorAlert(_ title: String = "Something went wrong", message: Binding<String?>) -> some View {
+        alert(title, isPresented: Binding(get: { message.wrappedValue != nil }, set: { if !$0 { message.wrappedValue = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: { Text(message.wrappedValue ?? "") }
     }
 }
 

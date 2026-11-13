@@ -37,7 +37,9 @@ struct DashboardView: View {
         ScrollView {
             VStack(spacing: Theme.Spacing.m) {
                 levelCard(d)
-                if let event = d.events.first(where: \.isActive) { eventBanner(event) }
+                if let event = d.events.first(where: \.isActive) {
+                    NavigationLink { EventsView() } label: { eventBanner(event) }.buttonStyle(.plain)
+                }
                 statsRow(d.stats)
                 if !env.location.isAuthorized { locationPrompt }
                 nearby(d.nearbySpots)
@@ -129,7 +131,7 @@ struct DashboardView: View {
 
     private func nearby(_ spots: [Spot]) -> some View {
         Card {
-            SectionHeader("Nearby spots")
+            SectionHeader(title: "Nearby spots") { NavigationLink("See all") { SpotsListView() } }
             if spots.isEmpty {
                 Text("No spots within 2 km.").font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
             }
@@ -166,7 +168,7 @@ struct DashboardView: View {
 
     private func quests(_ quests: [Quest]) -> some View {
         Card {
-            SectionHeader("Quests")
+            SectionHeader(title: "Quests") { NavigationLink("See all") { QuestsView() } }
             if quests.isEmpty {
                 Text("All quests claimed — nice!").font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
             }

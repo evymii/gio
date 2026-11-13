@@ -89,9 +89,21 @@ extension APIClient {
     func claimQuest(_ id: String) async throws -> ClaimResult { try await send("POST", "api/v1/quests/\(id)/claim") }
     func inventory() async throws -> [InventoryEntry] { try await send("GET", "api/v1/inventory") }
 
-    func leaderboard(period: String = "weekly") async throws -> Leaderboard {
-        try await send("GET", "api/v1/leaderboards", query: ["period": period, "limit": "50"])
+    func leaderboard(period: String = "weekly", region: String? = nil) async throws -> Leaderboard {
+        try await send("GET", "api/v1/leaderboards", query: ["period": period, "limit": "50", "region": region])
     }
+
+    func allSpots(type: String? = nil) async throws -> [Spot] {
+        try await send("GET", "api/v1/spots", query: ["type": type])
+    }
+
+    func checkinHistory(limit: Int = 50) async throws -> [CheckinHistoryItem] {
+        try await send("GET", "api/v1/checkins", query: ["limit": "\(limit)"])
+    }
+
+    func rewards() async throws -> [Reward] { try await send("GET", "api/v1/rewards") }
+    func events() async throws -> [GameEvent] { try await send("GET", "api/v1/events") }
+    func regions() async throws -> [Region] { try await send("GET", "api/v1/regions") }
 
     func dashboard(at c: CLLocationCoordinate2D?) async throws -> Dashboard {
         try await send("GET", "api/v1/dashboard", query: ["lat": c.map { "\($0.latitude)" }, "lng": c.map { "\($0.longitude)" }])

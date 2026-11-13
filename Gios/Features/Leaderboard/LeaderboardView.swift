@@ -4,6 +4,8 @@ import SwiftUI
 struct LeaderboardView: View {
     @Environment(AppEnvironment.self) private var env
     @State private var period = "weekly"
+    @State private var region: String? // nil = whole campus
+    @State private var regions: [Region] = []
     @State private var board: Leaderboard?
 
     var body: some View {
@@ -38,7 +40,25 @@ struct LeaderboardView: View {
             }
         }
         .navigationTitle("Leaderboard")
-        .task(id: period) { board = try? await env.api.leaderboard(period: period) }
-        .refreshable { board = try? await env.api.leaderboard(period: period) }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Picker("Area", selection: $region) {
+                        Text("Whole campus").tag(String?.none)
+                        ForEach(regions) { Text($0.name).tag(String?.some($0.slug)) }
+                    }
+                } label: {
+                    Label(regions.first { $0.slug == region }?.name ?? "Whole campus", systemImage: "line.3.horizontal.decrease.circle")
+                }
+            }
+        }
+        .task { regions = (try? await env.api.regions()) ?? [] }
+        .task(id: "\(period)|\(region ?? "")") { await load() }
+        .refreshable { await load() }
+    }
+
+    private func load() async {
+        board = nil
+        board = try? await env.api.leaderboard(period: period, region: region)
     }
 }

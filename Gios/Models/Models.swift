@@ -196,3 +196,18 @@ struct Health: Codable, Sendable {
     let environment: String
     let database: Database
 }
+
+struct Region: Codable, Hashable, Identifiable, Sendable {
+    let id: String
+    let slug: String
+    let name: String
+    let boundary: [LatLng]
+}
+
+struct CheckinHistoryItem: Codable, Hashable, Identifiable, Sendable {
+    let id: String
+    let spot: Spot
+    let xpAwarded: Int
+    let distanceMeters: Double
+    let createdAt: Date
+}

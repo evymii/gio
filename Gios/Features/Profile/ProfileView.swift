@@ -22,6 +22,7 @@ struct ProfileView: View {
                         }
                     }
                     .padding(.vertical, 4)
+                    NavigationLink { EditProfileView() } label: { Label("Edit profile", systemImage: "pencil") }
                 }
 
                 Section {
@@ -41,7 +42,7 @@ struct ProfileView: View {
                 }
             }
 
-            Section("Inventory") {
+            Section {
                 if inventory.isEmpty {
                     Text("Complete quests to earn badges and rewards.").foregroundStyle(Theme.Colors.textSecondary)
                 }
@@ -54,11 +55,18 @@ struct ProfileView: View {
                         }
                         Spacer()
                         if item.qty > 1 { Text("×\(item.qty)").font(Theme.Fonts.caption.weight(.bold)) }
-                        Text(item.reward.type.capitalized).font(.system(size: 11, weight: .semibold, design: .rounded))
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(Theme.Colors.accentSoft, in: Capsule())
+                        Tag(text: item.reward.type.capitalized)
                     }
                 }
+                NavigationLink { RewardsView() } label: { Label("All rewards", systemImage: "gift") }
+            } header: {
+                Text("Inventory")
+            }
+
+            Section("Activity") {
+                NavigationLink { CheckinHistoryView() } label: { Label("Check-in history", systemImage: "clock.arrow.circlepath") }
+                NavigationLink { QuestsView() } label: { Label("Quests", systemImage: "flag") }
+                NavigationLink { EventsView() } label: { Label("Events", systemImage: "sparkles") }
             }
 
             Section("App") {
@@ -86,7 +94,7 @@ struct ProfileView: View {
         .task {
             async let inv = try? env.api.inventory()
             async let h = try? env.api.health()
-            inventory = await inv ?? []
+            inventory = Array((await inv ?? []).prefix(3))
             health = await h
             await env.session.refreshMe()
         }
