@@ -95,13 +95,12 @@ struct APIClientTests {
     @Test func dashboardDecodes() async throws {
         await tokens.set(access: "a1", refresh: "r1")
         let spot = #"{"id":"s1","slug":"main-gate","name":"Main Gate","type":"landmark","description":"","lat":37.33,"lng":-122.0,"geohash":"9q9","radiusMeters":60,"rewardXp":20,"active":true,"distanceMeters":12,"inRange":true,"cooldownUntil":null}"#
-        let body = #"{"data":{"user":"# + meJSON + #","position":{"lat":37.33,"lng":-122.0},"region":{"id":"r","slug":"north-campus","name":"North Campus"},"stats":{"checkinsTotal":4,"checkinsThisWeek":2,"uniqueSpots":4,"friends":4},"nearbySpots":["# + spot + #"],"quests":[{"id":"q","slug":"coffee-run","title":"Coffee Run","description":"d","goal":{"type":"spot_type","target":2,"spotType":"cafe"},"rewardXp":80,"reward":{"id":"x","name":"Café Regular","type":"avatar","icon":"cup.and.saucer.fill"},"progress":2,"status":"completed","completedAt":null,"claimedAt":null}],"friendsOnline":{"count":1,"total":4,"users":[{"user":{"id":"f","name":"Mio","avatar":"avatar-2","level":3},"lastSeenAt":"2026-11-13T02:02:14.425Z","distanceMeters":120}]},"leaderboard":{"period":"weekly","rank":3,"score":160,"top":[]},"events":[{"id":"e","slug":"welcome-week","title":"Welcome Week","description":"2x","regionId":null,"startsAt":"2026-11-11T02:02:14.425Z","endsAt":"2026-11-25T02:02:14.425Z","xpMultiplier":2,"isActive":true}]}}"#
+        let body = #"{"data":{"user":"# + meJSON + #","position":{"lat":37.33,"lng":-122.0},"stats":{"checkinsTotal":4,"checkinsThisWeek":2,"uniqueSpots":4,"friends":4},"nearbySpots":["# + spot + #"],"quests":[{"id":"q","slug":"coffee-run","title":"Coffee Run","description":"d","goal":{"type":"spot_type","target":2,"spotType":"cafe"},"rewardXp":80,"progress":2,"status":"completed","completedAt":null,"claimedAt":null}],"friendsOnline":{"count":1,"total":4,"users":[{"user":{"id":"f","name":"Mio","avatar":"avatar-2","level":3},"lastSeenAt":"2026-11-13T02:02:14.425Z","distanceMeters":120}]},"leaderboard":{"period":"weekly","rank":3,"score":160,"top":[]}}}"#
         StubProtocol.handler = { _ in (200, body) }
         let d = try await api.dashboard(at: .init(latitude: 37.33, longitude: -122.0))
         #expect(d.nearbySpots.first?.inRange == true)
         #expect(d.quests.first?.isClaimable == true)
         #expect(d.friendsOnline.users.first?.user.name == "Mio")
-        #expect(d.events.first?.xpMultiplier == 2)
         let q = StubProtocol.requests.last?.url?.query ?? ""
         #expect(q.contains("lat=37.33") && q.contains("lng=-122.0"))
     }

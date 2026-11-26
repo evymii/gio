@@ -55,13 +55,9 @@ describe('auth', () => {
     expect((await request(app).post('/api/v1/auth/refresh').send({ refreshToken: next })).status).toBe(401);
   });
 
-  it('updates the profile and registers a device', async () => {
+  it('updates the profile', async () => {
     const u = await signup('Sora');
     const p = await u.patch('/api/v1/users/me', { name: 'Sora S', locationSharing: 'off' });
     expect(p.body.data).toMatchObject({ name: 'Sora S', locationSharing: 'off' });
-    const d1 = await u.put('/api/v1/devices', { deviceId: 'device-1234', platform: 'ios', locationPermission: 'when_in_use' });
-    expect(d1.status).toBe(200);
-    const d2 = await u.put('/api/v1/devices', { deviceId: 'device-1234', platform: 'ios', pushToken: 'fcm-token-abc' });
-    expect(d2.body.data).toMatchObject({ id: d1.body.data.id, pushToken: 'fcm-token-abc', locationPermission: 'when_in_use' });
   });
 });

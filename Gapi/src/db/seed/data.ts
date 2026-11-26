@@ -6,13 +6,6 @@
 
 export const SEED_EMAIL_DOMAIN = 'gios.app';
 
-/** Squares (north/east offsets). The border sits 20 m south of the centre so the Main Gate is clearly North Campus. */
-export const REGION_BORDER_NORTH = -20;
-export const regions = [
-  { slug: 'north-campus', name: 'North Campus', center: { north: 240, east: 0 }, halfSize: 260 }, // −20 … 500 m
-  { slug: 'south-campus', name: 'South Campus', center: { north: -260, east: 0 }, halfSize: 240 }, // −500 … −20 m
-];
-
 export const spots = [
   { slug: 'main-gate', name: 'Main Gate', type: 'landmark', north: 20, east: 0, radiusMeters: 60, rewardXp: 20, description: 'Where every campus day begins.' },
   { slug: 'central-library', name: 'Central Library', type: 'library', north: 150, east: -120, radiusMeters: 50, rewardXp: 40, description: 'Five floors of quiet — and the best window seats.' },
@@ -28,28 +21,13 @@ export const spots = [
   { slug: 'night-market', name: 'Night Market Square', type: 'event', north: -60, east: -330, radiusMeters: 60, rewardXp: 50, description: 'Food stalls every Friday night.' },
 ] as const;
 
-export const rewards = [
-  { slug: 'newcomer-badge', name: 'Newcomer', type: 'badge', value: 'newcomer', icon: 'figure.walk', description: 'Made your first check-in.' },
-  { slug: 'explorer-badge', name: 'Explorer', type: 'badge', value: 'explorer', icon: 'map.fill', description: 'Visited five different spots.' },
-  { slug: 'bookworm-title', name: 'Bookworm', type: 'title', value: 'Bookworm', icon: 'books.vertical.fill', description: 'A title for library regulars.' },
-  { slug: 'cafe-avatar', name: 'Café Regular', type: 'avatar', value: 'avatar-cafe', icon: 'cup.and.saucer.fill', description: 'A coffee-themed avatar.' },
-  { slug: 'xp-boost', name: 'XP Boost', type: 'boost', value: 'xp_x2_1h', icon: 'bolt.fill', description: 'Double XP for one hour.' },
-  { slug: 'athlete-badge', name: 'Athlete', type: 'badge', value: 'athlete', icon: 'figure.run', description: 'Warmed up at the sports spots.' },
-] as const;
-
 export const quests = [
-  { slug: 'first-steps', title: 'First Steps', description: 'Check in anywhere on campus.', goal: { type: 'checkins', target: 1 }, rewardXp: 50, reward: 'newcomer-badge' },
-  { slug: 'coffee-run', title: 'Coffee Run', description: 'Check in at 2 cafés.', goal: { type: 'spot_type', target: 2, spotType: 'cafe' }, rewardXp: 80, reward: 'cafe-avatar' },
-  { slug: 'warm-up', title: 'Warm Up', description: 'Check in at sports spots twice.', goal: { type: 'spot_type', target: 2, spotType: 'sports' }, rewardXp: 100, reward: 'athlete-badge' },
-  { slug: 'bookworm', title: 'Bookworm', description: 'Check in at libraries 3 times.', goal: { type: 'spot_type', target: 3, spotType: 'library' }, rewardXp: 150, reward: 'bookworm-title' },
-  { slug: 'campus-explorer', title: 'Campus Explorer', description: 'Visit 5 different spots.', goal: { type: 'unique_spots', target: 5 }, rewardXp: 200, reward: 'explorer-badge' },
-  { slug: 'regular', title: 'Campus Regular', description: 'Make 10 check-ins.', goal: { type: 'checkins', target: 10 }, rewardXp: 300, reward: 'xp-boost' },
-] as const;
-
-/** Relative to seed time, so there's always an active event. */
-export const events = [
-  { slug: 'welcome-week', title: 'Welcome Week', description: 'Double XP on every check-in.', region: null, startsInDays: -2, durationDays: 14, xpMultiplier: 2 },
-  { slug: 'night-market-weekend', title: 'Night Market Weekend', description: '1.5× XP across South Campus.', region: 'south-campus', startsInDays: 5, durationDays: 2, xpMultiplier: 1.5 },
+  { slug: 'first-steps', title: 'First Steps', description: 'Check in anywhere on campus.', goal: { type: 'checkins', target: 1 }, rewardXp: 50 },
+  { slug: 'coffee-run', title: 'Coffee Run', description: 'Check in at 2 cafés.', goal: { type: 'spot_type', target: 2, spotType: 'cafe' }, rewardXp: 80 },
+  { slug: 'warm-up', title: 'Warm Up', description: 'Check in at sports spots twice.', goal: { type: 'spot_type', target: 2, spotType: 'sports' }, rewardXp: 100 },
+  { slug: 'bookworm', title: 'Bookworm', description: 'Check in at libraries 3 times.', goal: { type: 'spot_type', target: 3, spotType: 'library' }, rewardXp: 150 },
+  { slug: 'campus-explorer', title: 'Campus Explorer', description: 'Visit 5 different spots.', goal: { type: 'unique_spots', target: 5 }, rewardXp: 200 },
+  { slug: 'regular', title: 'Campus Regular', description: 'Make 10 check-ins.', goal: { type: 'checkins', target: 10 }, rewardXp: 300 },
 ] as const;
 
 /** Demo accounts (password = SEED_PASSWORD). Log in as demo@gios.app. */

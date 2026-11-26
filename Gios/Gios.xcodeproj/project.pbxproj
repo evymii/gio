@@ -26,9 +26,7 @@
 		83F24911AC40BC4CA97CD6ED /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8D1074E0683E27E0304C19F /* Keychain.swift */; };
 		8420AC7E09671019CB8F29E8 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7499874E00FE52ABCE7606 /* RootView.swift */; };
 		8D3ACFED05780C4267509915 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F742EB106056B0D83DD9EF93 /* Theme.swift */; };
-		953A4DDCF52CA52AA80FC4CC /* EventsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4C9EAC3367C18565ED3D0E /* EventsView.swift */; };
 		9A865FCB6A881658D448943B /* CheckinHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C296EA5167DBA651917541F /* CheckinHistoryView.swift */; };
-		9DB5AFB3DADC39DBC579F823 /* RewardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1882952B56032EEEAC1CE33 /* RewardsView.swift */; };
 		A18B956591977EC8A5664B22 /* CampusMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C32C3DD3C7AF49F618BE49 /* CampusMapView.swift */; };
 		A467C51066F8551BAB1BEE03 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A829F524AA82D7B450EFC4 /* ProfileView.swift */; };
 		AB06128E184A856F90098FEC /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84C08E3B601E628BABAD824 /* DashboardView.swift */; };
@@ -73,7 +71,6 @@
 		4EEA213563F1EB858970A73C /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		5245B4D9FE3802C856C26E96 /* TokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenStore.swift; sourceTree = "<group>"; };
 		97B63FCF03F9813958A154E9 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
-		AB4C9EAC3367C18565ED3D0E /* EventsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsView.swift; sourceTree = "<group>"; };
 		AF764A9478ED2994F3DF5BA7 /* AppEnvironment+Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppEnvironment+Actions.swift"; sourceTree = "<group>"; };
 		B0D3A2EEC38D9E2AB5E8810C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B38DE74A14A367B4E0D4315C /* FriendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsView.swift; sourceTree = "<group>"; };
@@ -86,7 +83,6 @@
 		DAC240BF5F16D1AE267AB04F /* LeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardView.swift; sourceTree = "<group>"; };
 		DC33CAE7A9B5FF0E9B3CFFD4 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
 		E8D1074E0683E27E0304C19F /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
-		F1882952B56032EEEAC1CE33 /* RewardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardsView.swift; sourceTree = "<group>"; };
 		F742EB106056B0D83DD9EF93 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		F84C08E3B601E628BABAD824 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -145,14 +141,6 @@
 			path = Quests;
 			sourceTree = "<group>";
 		};
-		2DB3A31BA7E14858FB7B1392 /* Events */ = {
-			isa = PBXGroup;
-			children = (
-				AB4C9EAC3367C18565ED3D0E /* EventsView.swift */,
-			);
-			path = Events;
-			sourceTree = "<group>";
-		};
 		2DD1AC5D1D9BDB7185FE2E84 /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -191,14 +179,12 @@
 			children = (
 				478690CB99B754E20E88E23A /* Auth */,
 				1204412BD8D4BAB74ECF0D84 /* Dashboard */,
-				2DB3A31BA7E14858FB7B1392 /* Events */,
 				7D8D6C733D2E263E41FAAA7E /* Friends */,
 				04FD93E1FECDC7C9FDF3AAB7 /* Leaderboard */,
 				147361CC816A9A574EC1EC1F /* Main */,
 				373CCE1D52235429D9A7EA72 /* Map */,
 				AD9E28CC835AAFB7BE9DE700 /* Profile */,
 				2BF0EA5C2235E636B699D2BE /* Quests */,
-				729E8B3769A66DC10E7DFA22 /* Rewards */,
 				C14CA5F2C0B23F77A0D6F94E /* Splash */,
 				CAE1BC5607820B8BF2018C29 /* Spots */,
 			);
@@ -226,14 +212,6 @@
 				DA7499874E00FE52ABCE7606 /* RootView.swift */,
 			);
 			path = App;
-			sourceTree = "<group>";
-		};
-		729E8B3769A66DC10E7DFA22 /* Rewards */ = {
-			isa = PBXGroup;
-			children = (
-				F1882952B56032EEEAC1CE33 /* RewardsView.swift */,
-			);
-			path = Rewards;
 			sourceTree = "<group>";
 		};
 		73A3F0CF26C6D6D739DDD935 /* Location */ = {
@@ -441,7 +419,6 @@
 				61F9FA0CE4A6ADC5D68A537A /* DashboardViewModel.swift in Sources */,
 				BD46455EFDB573EDDF285478 /* EditProfileView.swift in Sources */,
 				E0C71D4215638D007D8F1E32 /* Endpoints.swift in Sources */,
-				953A4DDCF52CA52AA80FC4CC /* EventsView.swift in Sources */,
 				656C5EE2D5D122E222493D5D /* FriendsView.swift in Sources */,
 				C15C25490E34B3BC695A193D /* GiosApp.swift in Sources */,
 				83F24911AC40BC4CA97CD6ED /* Keychain.swift in Sources */,
@@ -453,7 +430,6 @@
 				32A62185A97AC713316E6F6F /* PillCollage.swift in Sources */,
 				A467C51066F8551BAB1BEE03 /* ProfileView.swift in Sources */,
 				72FA7D2C2D490E5FE5EFDA6D /* QuestsView.swift in Sources */,
-				9DB5AFB3DADC39DBC579F823 /* RewardsView.swift in Sources */,
 				8420AC7E09671019CB8F29E8 /* RootView.swift in Sources */,
 				C8D422E87D9DF9ADB0D2CBC4 /* SessionStore.swift in Sources */,
 				F02ED615E227447061C8E906 /* SpotsListView.swift in Sources */,

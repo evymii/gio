@@ -1,6 +1,6 @@
 # Gapi
 
-API for **Gios**, a social campus map: share your location with friends, discover campus spots, check in to earn XP, complete quests, collect rewards and climb the leaderboards.
+API for **Gios**, a social campus map: share your location with friends, discover campus spots, check in to earn XP, complete quests and climb the leaderboards.
 
 Node 22 · Express 5 · TypeScript · MongoDB (Mongoose, geospatial `2dsphere` indexes) · zod · JWT auth
 
@@ -20,7 +20,7 @@ The API runs at `http://localhost:8080`. Log in as **demo@gios.app / campus123**
 | `npm run dev` | API with hot reload, using `MONGODB_URI` from `.env` |
 | `npm run dev:memory` | API with a temporary in-memory MongoDB, seeded automatically |
 | `npm run seed` | Creates every collection and index, updates the catalog and rebuilds the demo users' activity. Safe to rerun. |
-| `npm run seed:reset` | Same as `seed`, but wipes the catalog (regions, spots, rewards, quests, events) first. |
+| `npm run seed:reset` | Same as `seed`, but wipes the catalog (spots, quests) first. |
 | `npm test` | 18 tests against an in-memory MongoDB |
 | `npm run typecheck` / `npm run build` / `npm start` | Type-check, compile, run compiled code |
 
@@ -34,16 +34,12 @@ MongoDB with GeoJSON + `2dsphere` indexes, MongoDB's built-in equivalent of Post
 |---|---|---|
 | `users` | id, name, avatar, level, xp, created_at → `createdAt`; + `email`, `passwordHash`, `locationSharing` (`friends`/`off`), `lastLocation` | `lastLocation.point` 2dsphere |
 | `sessions` | user, tokenHash, expiresAt | one per login; TTL index deletes expired sessions |
-| `devices` | user_id → `user`, push_token → `pushToken`, platform, location_permission → `locationPermission` | unique (user, deviceId); push token ready for Firebase Cloud Messaging |
 | `user_locations` | user, lat/lng → `point`, accuracy_m → `accuracyMeters`, geohash, recorded_at → `recordedAt` | **TTL: deleted after `LOCATION_TTL_DAYS` (7)**; only stored while sharing is on |
-| `spots` | name, type, lat/lng → `point`, geohash, radius_m → `radiusMeters`, reward_xp → `rewardXp`, active, region | 2dsphere for "nearby" |
+| `spots` | name, type, lat/lng → `point`, geohash, radius_m → `radiusMeters`, reward_xp → `rewardXp`, active | 2dsphere for "nearby" |
 | `checkins` | user, spot, lat/lng → `point`, distance_m → `distanceMeters`, verified, `xpAwarded`, created_at | distance measured by the server |
-| `quests` / `user_quests` | title, goal `{type, target, spotType}`, `rewardXp`, reward / user, quest, progress, status | goals: `checkins`, `unique_spots`, `spot_type` |
-| `rewards` / `inventory` | type, value, name, icon / user, reward, qty, claimed_at | types: badge, title, avatar, boost |
-| `leaderboards` | user, region (null = campus-wide), period (`all_time` or `week:2026-W46`), score | updated on every XP gain |
-| `regions` | name, polygon → `area` (GeoJSON Polygon) | 2dsphere for "which region am I in" |
+| `quests` / `user_quests` | title, goal `{type, target, spotType}`, `rewardXp` / user, quest, progress, status | goals: `checkins`, `unique_spots`, `spot_type` |
+| `leaderboards` | user, period (`all_time` or `week:2026-W46`), score | updated on every XP gain |
 | `friends` | user (requester), friend, status (`pending`/`accepted`) | unique pair |
-| `events` | region, starts_at, ends_at, title, `xpMultiplier` | e.g. Welcome Week = 2× XP |
 
 ## API (v1)
 
@@ -57,17 +53,13 @@ Every endpoint except `/health` and `/auth/*` needs `Authorization: Bearer <acce
 | `POST /auth/logout` `{refreshToken}` | End this session. |
 | `GET /users/me` · `PATCH /users/me` `{name?, avatar?, locationSharing?}` | Your profile, including level progress. |
 | `GET /users/search?q=` | Find people by name prefix or exact email. |
-| `PUT /devices` `{deviceId, platform, pushToken?, locationPermission?}` | Register this phone. |
 | `POST /locations` `{points:[{lat,lng,accuracyMeters?,recordedAt?}]}` | Share your location (1–50 points per call). |
 | `GET /locations/friends` | Friends' last positions. Includes only friends who share, and only positions from the last 24 h. |
 | `GET /friends` · `POST /friends/requests` `{userId}` · `POST /friends/:id/accept` · `DELETE /friends/:id` | Your friends and friend requests. |
 | `GET /spots` · `GET /spots/nearby?lat&lng&radius` · `GET /spots/:id` | Spots. Nearby results include `distanceMeters`, `inRange` and `cooldownUntil`. |
 | `POST /checkins` `{spotId, lat, lng, accuracyMeters?}` · `GET /checkins` | Check in (verified if within the spot's radius, with up to 50 m of GPS tolerance; 6 h cooldown per spot). See your history. |
-| `GET /quests` · `POST /quests/:id/claim` | Quests with your progress. Claiming grants XP and a reward. |
-| `GET /rewards` · `GET /inventory` | The rewards catalog and what you own. |
-| `GET /leaderboards?period=weekly\|all_time&region=<slug>` | Top players plus your rank. |
-| `GET /regions` · `GET /regions/at?lat&lng` | Campus areas, and which one a point is in. |
-| `GET /events` | Current and upcoming events. |
+| `GET /quests` · `POST /quests/:id/claim` | Quests with your progress. Claiming grants XP. |
+| `GET /leaderboards?period=weekly\|all_time` | Campus-wide top players plus your rank. |
 | `GET /dashboard?lat&lng` | Everything for the home screen in one call. |
 | `GET /health` | API and database status. |
 

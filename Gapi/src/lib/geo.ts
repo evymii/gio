@@ -50,15 +50,3 @@ export function geohash({ lat, lng }: LatLng, precision = 7): string {
   }
   return hash;
 }
-
-/** A square GeoJSON polygon around a centre (closed ring, counter-clockwise). */
-export function squarePolygon(center: LatLng, halfSizeMeters: number) {
-  const sw = offsetMeters(center, -halfSizeMeters, -halfSizeMeters);
-  const ne = offsetMeters(center, halfSizeMeters, halfSizeMeters);
-  return {
-    type: 'Polygon' as const,
-    coordinates: [[
-      [sw.lng, sw.lat], [ne.lng, sw.lat], [ne.lng, ne.lat], [sw.lng, ne.lat], [sw.lng, sw.lat],
-    ]],
-  };
-}

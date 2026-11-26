@@ -30,8 +30,6 @@ final class AppEnvironment {
     func didSignIn() async {
         location.start()
         sharer.isEnabled = session.me?.isSharing ?? false
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
-        try? await api.registerDevice(deviceId: config.deviceId, locationPermission: location.permissionName, appVersion: version)
         if let loc = location.location { sharer.handle(loc) }
     }
 

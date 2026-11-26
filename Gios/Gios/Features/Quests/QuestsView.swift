@@ -26,7 +26,7 @@ struct QuestsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(alignment: .top) {
-                    StackedTitle(primary: "Quests", secondary: "Goals & rewards", size: 40)
+                    StackedTitle(primary: "Quests", secondary: "Goals & XP", size: 40)
                     Spacer()
                     if let quests {
                         LineBadge("\(quests.filter(\.isClaimable).count)", color: Theme.Colors.yellow, size: 44)
@@ -53,7 +53,6 @@ struct QuestsView: View {
                                     Text(q.description).font(Theme.Fonts.caption).foregroundStyle(Theme.Colors.textSecondary)
                                     Spacer()
                                     Tag(text: "+\(q.rewardXp) XP")
-                                    if let r = q.reward { Tag(text: r.name, tint: Theme.Colors.lavender) }
                                 }
                                 .padding(.horizontal, 12).padding(.bottom, 6)
                             }
@@ -103,13 +102,13 @@ private struct ClaimedSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.l) {
             HStack {
-                LineBadge(icon: result.reward?.icon ?? "star.fill", color: Theme.Colors.ink, size: 64, foreground: Theme.Colors.yellow)
+                LineBadge(icon: "star.fill", color: Theme.Colors.ink, size: 64, foreground: Theme.Colors.yellow)
                 Spacer()
                 CircleButton(systemName: "xmark", size: 48, fill: Theme.Colors.ink.opacity(0.1), foreground: Theme.Colors.ink) { dismiss() }
             }
             Spacer()
             Text("+\(result.xpAwarded)").font(Theme.Fonts.number(110, weight: .regular)).tracking(-5)
-            StackedTitle(primary: "XP earned", secondary: result.reward.map { "\($0.name) unlocked" } ?? "Quest complete",
+            StackedTitle(primary: "XP earned", secondary: "Quest complete",
                          size: 36, primaryColor: Theme.Colors.ink, secondaryColor: Theme.Colors.ink.opacity(0.5))
             if result.user.leveledUp {
                 Tag(text: "LEVEL UP → \(result.user.level)", tint: Theme.Colors.ink, filled: true)

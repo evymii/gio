@@ -7,13 +7,10 @@ import { requireAuth } from '../../middleware/auth.js';
 import { validate } from '../../middleware/validate.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { Checkin } from '../checkins/checkin.model.js';
-import { activeEvents } from '../events/event.service.js';
-import { toEventDTO } from '../events/event.routes.js';
 import { acceptedFriendIds } from '../friends/friend.service.js';
 import { leaderboard } from '../leaderboards/leaderboard.service.js';
 import { ONLINE_WINDOW_MS } from '../locations/location.routes.js';
 import { questsFor } from '../quests/quest.service.js';
-import { regionAt } from '../regions/region.service.js';
 import { nearbySpots } from '../spots/spot.service.js';
 import { toMeDTO, toPublicUserDTO } from '../users/user.dto.js';
 import { User } from '../users/user.model.js';
@@ -25,7 +22,7 @@ const query = z.object({
 
 /**
  * /api/v1/dashboard — everything the home screen needs in one request:
- * profile + level, stats, nearby spots, quests, friends online, weekly rank, events.
+ * profile + level, stats, nearby spots, quests, friends online, weekly rank.
  * Pass ?lat=&lng= for the current position (falls back to your last shared location).
  */
 export const dashboardRouter = Router();
@@ -40,17 +37,15 @@ dashboardRouter.get('/', validate(query, 'query'), async (req, res) => {
 
   const myId = new Types.ObjectId(req.userId);
   const friendIds = await acceptedFriendIds(req.userId);
-  const region = here ? await regionAt(here) : null;
 
-  const [checkinsTotal, checkinsThisWeek, uniqueSpots, friends, spots, quests, weekly, events] = await Promise.all([
+  const [checkinsTotal, checkinsThisWeek, uniqueSpots, friends, spots, quests, weekly] = await Promise.all([
     Checkin.countDocuments({ user: myId, verified: true }),
     Checkin.countDocuments({ user: myId, verified: true, createdAt: { $gte: startOfIsoWeek() } }),
     Checkin.distinct('spot', { user: myId, verified: true }).then((s) => s.length),
     User.find({ _id: { $in: friendIds } }),
     here ? nearbySpots(req.userId, here, 2000, 5) : Promise.resolve([]),
     questsFor(req.userId),
-    leaderboard(req.userId, 'weekly', null, 3),
-    activeEvents(region?._id ?? null),
+    leaderboard(req.userId, 'weekly', 3),
   ]);
 
   const now = Date.now();
@@ -74,13 +69,11 @@ dashboardRouter.get('/', validate(query, 'query'), async (req, res) => {
     data: {
       user: toMeDTO(me),
       position: here,
-      region: region ? { id: String(region._id), slug: region.slug, name: region.name } : null,
       stats: { checkinsTotal, checkinsThisWeek, uniqueSpots, friends: friends.length },
       nearbySpots: spots,
       quests: highlighted,
       friendsOnline: { count: online.length, total: friends.length, users: online.slice(0, 5) },
       leaderboard: { period: 'weekly', rank: weekly.me.rank, score: weekly.me.score, top: weekly.entries },
-      events: events.map((e) => toEventDTO(e)),
     },
   });
 });

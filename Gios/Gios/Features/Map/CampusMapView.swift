@@ -1,12 +1,11 @@
 import MapKit
 import SwiftUI
 
-/// Live campus map: region lines, spots (signage pins + radius), friends, and you.
+/// Live campus map: spots (signage pins + radius), friends, and you.
 struct CampusMapView: View {
     @Environment(AppEnvironment.self) private var env
     @State private var spots: [Spot] = []
     @State private var friends: [FriendLocation] = []
-    @State private var regions: [Region] = []
     @State private var selected: Spot?
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var error: String?
@@ -15,11 +14,6 @@ struct CampusMapView: View {
 
     var body: some View {
         Map(position: $position) {
-            ForEach(Array(regions.enumerated()), id: \.element.id) { i, r in
-                MapPolygon(coordinates: r.boundary.map(\.coordinate))
-                    .foregroundStyle(Theme.Colors.cycled(i).opacity(0.06))
-                    .stroke(Theme.Colors.cycled(i), style: StrokeStyle(lineWidth: 3, dash: [10, 6]))
-            }
             UserAnnotation()
             ForEach(spots) { spot in
                 let style = Theme.spotStyle(spot.type)
@@ -68,7 +62,6 @@ struct CampusMapView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .sheet(item: $selected) { spot in SpotSheet(spot: spot) { Task { await load() } } }
-        .task { regions = (try? await env.api.regions()) ?? [] }
         .task {
             while !Task.isCancelled {
                 await load()

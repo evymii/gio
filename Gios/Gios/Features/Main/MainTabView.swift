@@ -104,15 +104,13 @@ struct MainTabView: View {
     }
 
     #if DEBUG
-    /// DEBUG: `-open quests|rewards|history|events|spots|edit|leaderboard` opens one page directly.
+    /// DEBUG: `-open quests|history|spots|edit|spot|leaderboard` opens one page directly.
     @ViewBuilder private static var debugScreen: (some View)? {
         let args = ProcessInfo.processInfo.arguments
         if let i = args.firstIndex(of: "-open"), i + 1 < args.count {
             switch args[i + 1] {
             case "quests": QuestsView()
-            case "rewards": RewardsView()
             case "history": CheckinHistoryView()
-            case "events": EventsView()
             case "spots": SpotsListView()
             case "edit": EditProfileView()
             case "spot": DebugSpotSheet()

@@ -38,7 +38,7 @@ final class DashboardViewModel {
         defer { busyQuestId = nil }
         do {
             let r = try await env.claim(quest)
-            toast = "+\(r.xpAwarded) XP" + (r.reward.map { " · \($0.name) added to your inventory" } ?? "")
+            toast = "+\(r.xpAwarded) XP"
             await load(env)
         } catch {
             toast = error.localizedDescription

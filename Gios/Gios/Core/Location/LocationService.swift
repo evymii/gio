@@ -23,18 +23,6 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     var isAuthorized: Bool { authorization == .authorizedWhenInUse || authorization == .authorizedAlways }
     var isDenied: Bool { authorization == .denied || authorization == .restricted }
 
-    /// Value Gapi expects in PUT /devices.
-    var permissionName: String {
-        switch authorization {
-        case .notDetermined: "not_determined"
-        case .denied: "denied"
-        case .restricted: "restricted"
-        case .authorizedAlways: "always"
-        case .authorizedWhenInUse: "when_in_use"
-        @unknown default: "not_determined"
-        }
-    }
-
     func requestPermission() {
         if authorization == .notDetermined { manager.requestWhenInUseAuthorization() }
     }

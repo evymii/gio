@@ -17,7 +17,7 @@ describe('seed + dashboard', () => {
   it('creates every collection and is idempotent', async () => {
     const first = await runSeed({ center: CENTER, password: 'campus123' });
     expect(first.collections).toMatchObject({
-      users: 7, regions: 2, spots: 12, rewards: 6, quests: 6, events: 2, friends: 8, checkins: 30, devices: 1,
+      users: 7, spots: 12, quests: 6, friends: 8, checkins: 30,
     });
     const second = await runSeed({ center: CENTER, password: 'campus123' });
     expect(second.collections).toEqual(first.collections);
@@ -37,7 +37,6 @@ describe('seed + dashboard', () => {
 
     expect(d.user.name).toBe('Demo Student');
     expect(d.user.xp).toBeGreaterThan(0);
-    expect(d.region.slug).toBe('north-campus');
     expect(d.stats).toMatchObject({ checkinsTotal: 4, uniqueSpots: 4, friends: 4 });
     expect(d.nearbySpots[0].slug).toBe('main-gate');
     // Mio (2 min) and Ana (6 min) are online; Kai is stale (45 min); Sora is in ghost mode.
@@ -45,7 +44,6 @@ describe('seed + dashboard', () => {
     expect(d.friendsOnline.total).toBe(4);
     // Coffee Run is complete but unclaimed → shown first.
     expect(d.quests[0]).toMatchObject({ slug: 'coffee-run', status: 'completed' });
-    expect(d.events.map((e: { slug: string }) => e.slug)).toContain('welcome-week');
     expect(d.leaderboard.top.length).toBeGreaterThan(0);
 
     const friendsMap = (await get('/api/v1/locations/friends')).body.data;

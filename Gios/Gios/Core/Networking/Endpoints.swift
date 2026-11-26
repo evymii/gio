@@ -25,19 +25,12 @@ extension APIClient {
         try await send("GET", "health", authed: false, acceptStatus: [503])
     }
 
-    // MARK: Me & devices
+    // MARK: Me
     func me() async throws -> Me { try await send("GET", "api/v1/users/me") }
 
     func updateMe(name: String? = nil, avatar: String? = nil, locationSharing: String? = nil) async throws -> Me {
         struct Body: Encodable { let name: String?; let avatar: String?; let locationSharing: String? }
         return try await send("PATCH", "api/v1/users/me", body: Body(name: name, avatar: avatar, locationSharing: locationSharing))
-    }
-
-    func registerDevice(deviceId: String, locationPermission: String, appVersion: String?) async throws {
-        struct Body: Encodable { let deviceId, platform, locationPermission: String; let appVersion: String? }
-        struct Device: Decodable { let id: String }
-        let _: Device = try await send("PUT", "api/v1/devices",
-                                       body: Body(deviceId: deviceId, platform: "ios", locationPermission: locationPermission, appVersion: appVersion))
     }
 
     func searchUsers(_ q: String) async throws -> [PublicUser] {
@@ -87,10 +80,9 @@ extension APIClient {
 
     func quests() async throws -> [Quest] { try await send("GET", "api/v1/quests") }
     func claimQuest(_ id: String) async throws -> ClaimResult { try await send("POST", "api/v1/quests/\(id)/claim") }
-    func inventory() async throws -> [InventoryEntry] { try await send("GET", "api/v1/inventory") }
 
-    func leaderboard(period: String = "weekly", region: String? = nil) async throws -> Leaderboard {
-        try await send("GET", "api/v1/leaderboards", query: ["period": period, "limit": "50", "region": region])
+    func leaderboard(period: String = "weekly") async throws -> Leaderboard {
+        try await send("GET", "api/v1/leaderboards", query: ["period": period, "limit": "50"])
     }
 
     func allSpots(type: String? = nil) async throws -> [Spot] {
@@ -100,10 +92,6 @@ extension APIClient {
     func checkinHistory(limit: Int = 50) async throws -> [CheckinHistoryItem] {
         try await send("GET", "api/v1/checkins", query: ["limit": "\(limit)"])
     }
-
-    func rewards() async throws -> [Reward] { try await send("GET", "api/v1/rewards") }
-    func events() async throws -> [GameEvent] { try await send("GET", "api/v1/events") }
-    func regions() async throws -> [Region] { try await send("GET", "api/v1/regions") }
 
     func dashboard(at c: CLLocationCoordinate2D?) async throws -> Dashboard {
         try await send("GET", "api/v1/dashboard", query: ["lat": c.map { "\($0.latitude)" }, "lng": c.map { "\($0.longitude)" }])

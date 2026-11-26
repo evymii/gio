@@ -1,11 +1,9 @@
 import SwiftUI
 
-/// Big-number rankings, this week or all time, campus-wide or per region.
+/// Big-number rankings, this week or all time.
 struct LeaderboardView: View {
     @Environment(AppEnvironment.self) private var env
     @State private var period = "weekly"
-    @State private var region: String?
-    @State private var regions: [Region] = []
     @State private var board: Leaderboard?
 
     var body: some View {
@@ -15,12 +13,6 @@ struct LeaderboardView: View {
                 HStack(spacing: 4) {
                     Chip(title: "This week", selected: period == "weekly") { period = "weekly" }
                     Chip(title: "All time", selected: period == "all_time") { period = "all_time" }
-                }
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        regionChip(nil, "Whole campus", Theme.Colors.yellow)
-                        ForEach(Array(regions.enumerated()), id: \.element.id) { i, r in regionChip(r.slug, r.name, Theme.Colors.cycled(i)) }
-                    }
                 }
 
                 if let board {
@@ -51,8 +43,7 @@ struct LeaderboardView: View {
         }
         .pageBackground()
         .navigationBarTitleDisplayMode(.inline)
-        .task { regions = (try? await env.api.regions()) ?? [] }
-        .task(id: "\(period)|\(region ?? "")") { await load() }
+        .task(id: period) { await load() }
         .refreshable { await load() }
     }
 
@@ -76,22 +67,9 @@ struct LeaderboardView: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func regionChip(_ slug: String?, _ name: String, _ color: Color) -> some View {
-        Button { region = slug } label: {
-            HStack(spacing: 8) {
-                Circle().fill(color).frame(width: 12, height: 12)
-                Text(name).font(Theme.Fonts.bold(14))
-            }
-            .padding(.horizontal, 14).padding(.vertical, 10)
-            .foregroundStyle(region == slug ? Theme.Colors.ink : Theme.Colors.text)
-            .background(region == slug ? Color.white : Theme.Colors.surface, in: Capsule())
-        }
-        .buttonStyle(PressableStyle())
-    }
-
     private func load() async {
         withAnimation { board = nil }
-        let b = try? await env.api.leaderboard(period: period, region: region)
+        let b = try? await env.api.leaderboard(period: period)
         withAnimation(.spring(response: 0.4)) { board = b }
     }
 }

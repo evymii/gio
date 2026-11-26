@@ -48,10 +48,6 @@ struct DashboardView: View {
                 numbers(d).appear(delay: 0.12)
                 arc(d).appear(delay: 0.14)
                 if !env.location.isAuthorized { locationPrompt }
-                if let event = d.events.first(where: \.isActive) {
-                    NavigationLink { EventsView() } label: { EventCard(event: event, compact: true) }
-                        .buttonStyle(PressableStyle()).appear(delay: 0.15)
-                }
                 nearby(d.nearbySpots)
                 quests(d.quests)
                 friends(d.friendsOnline)
@@ -79,7 +75,7 @@ struct DashboardView: View {
 
     /// "Today" sentence built from live data.
     private func today(_ d: Dashboard) -> some View {
-        var parts: [(String, Bool)] = [("Today you're at ", false), (d.region?.name ?? "campus", true)]
+        var parts: [(String, Bool)] = [("Today you're on ", false), ("campus", true)]
         if d.friendsOnline.count > 0 {
             parts += [(" with ", false), ("\(d.friendsOnline.count) friend\(d.friendsOnline.count == 1 ? "" : "s") online", true)]
         }
@@ -88,9 +84,6 @@ struct DashboardView: View {
         }
         if let q = d.quests.first(where: \.isClaimable) {
             parts += [(" and claim ", false), (q.title, true)]
-        }
-        if let e = d.events.first(where: \.isActive) {
-            parts += [(" — ", false), ("\(e.title) ×\(e.xpMultiplier.formatted())", true)]
         }
         parts.append((".", false))
         return HighlightSentence(parts: parts)
@@ -109,7 +102,7 @@ struct DashboardView: View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
             Button { selectTab(.map) } label: { ActionTile(title: "Open\nlive map", color: .white) }
             Button { selectTab(.friends) } label: { ActionTile(title: "Find\nfriends", color: Theme.Colors.lavender) }
-            NavigationLink { QuestsView() } label: { ActionTile(title: "Quests &\nrewards", color: Theme.Colors.yellow) }
+            NavigationLink { QuestsView() } label: { ActionTile(title: "Quests &\nXP", color: Theme.Colors.yellow) }
             NavigationLink { LeaderboardView() } label: { ActionTile(title: "Leader-\nboard", color: Theme.Colors.surface2) }
         }
         .buttonStyle(PressableStyle())

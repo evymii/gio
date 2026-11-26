@@ -14,14 +14,6 @@ final class AppConfig: @unchecked Sendable {
         }
     }
 
-    /// Stable per-install id used to register this phone (PUT /devices).
-    var deviceId: String {
-        if let id = defaults.string(forKey: "gios.deviceId") { return id }
-        let id = UUID().uuidString
-        defaults.set(id, forKey: "gios.deviceId")
-        return id
-    }
-
     init(bundle: Bundle = .main, defaults: UserDefaults = .standard) {
         self.defaults = defaults
         let raw = bundle.object(forInfoDictionaryKey: "GAPI_BASE_URL") as? String

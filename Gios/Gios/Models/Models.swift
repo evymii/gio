@@ -64,14 +64,12 @@ struct Spot: Codable, Hashable, Identifiable, Sendable {
 
 struct Quest: Codable, Hashable, Identifiable, Sendable {
     struct Goal: Codable, Hashable, Sendable { let type: String; let target: Int; let spotType: String? }
-    struct RewardRef: Codable, Hashable, Sendable { let id: String; let name: String; let type: String; let icon: String }
     let id: String
     let slug: String
     let title: String
     let description: String
     let goal: Goal
     let rewardXp: Int
-    let reward: RewardRef?
     let progress: Int
     let status: String
 
@@ -87,7 +85,6 @@ struct CheckinResult: Codable, Sendable {
         let distanceMeters: Double
         let verified: Bool
         let xpAwarded: Int
-        let multiplier: Double
     }
     struct UserXP: Codable, Sendable { let xp: Int; let level: Int; let leveledUp: Bool }
     struct QuestUpdate: Codable, Sendable { let questId: String; let title: String; let progress: Int; let target: Int; let completed: Bool }
@@ -100,7 +97,6 @@ struct CheckinResult: Codable, Sendable {
 struct ClaimResult: Codable, Sendable {
     let xpAwarded: Int
     let user: CheckinResult.UserXP
-    let reward: Quest.RewardRef?
 }
 
 struct FriendLocation: Codable, Hashable, Identifiable, Sendable {
@@ -138,36 +134,7 @@ struct Leaderboard: Codable, Sendable {
     let me: MyRank
 }
 
-struct GameEvent: Codable, Hashable, Identifiable, Sendable {
-    let id: String
-    let slug: String
-    let title: String
-    let description: String
-    let startsAt: Date
-    let endsAt: Date
-    let xpMultiplier: Double
-    let isActive: Bool
-}
-
-struct Reward: Codable, Hashable, Identifiable, Sendable {
-    let id: String
-    let slug: String
-    let name: String
-    let type: String
-    let value: String
-    let description: String
-    let icon: String
-}
-
-struct InventoryEntry: Codable, Hashable, Identifiable, Sendable {
-    let reward: Reward
-    let qty: Int
-    let claimedAt: Date
-    var id: String { reward.id }
-}
-
 struct Dashboard: Codable, Sendable {
-    struct RegionRef: Codable, Sendable { let id: String; let slug: String; let name: String }
     struct Stats: Codable, Sendable { let checkinsTotal: Int; let checkinsThisWeek: Int; let uniqueSpots: Int; let friends: Int }
     struct OnlineFriend: Codable, Hashable, Identifiable, Sendable {
         let user: PublicUser
@@ -180,13 +147,11 @@ struct Dashboard: Codable, Sendable {
 
     let user: Me
     let position: LatLng?
-    let region: RegionRef?
     let stats: Stats
     let nearbySpots: [Spot]
     let quests: [Quest]
     let friendsOnline: FriendsOnline
     let leaderboard: Rank
-    let events: [GameEvent]
 }
 
 struct Health: Codable, Sendable {
@@ -195,13 +160,6 @@ struct Health: Codable, Sendable {
     let version: String
     let environment: String
     let database: Database
-}
-
-struct Region: Codable, Hashable, Identifiable, Sendable {
-    let id: String
-    let slug: String
-    let name: String
-    let boundary: [LatLng]
 }
 
 struct CheckinHistoryItem: Codable, Hashable, Identifiable, Sendable {

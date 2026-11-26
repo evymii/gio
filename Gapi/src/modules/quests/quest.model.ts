@@ -13,7 +13,7 @@ const goalSchema = new Schema(
   { _id: false },
 );
 
-/** quests — id, title, goal, reward. */
+/** quests — id, title, goal, XP. */
 const questSchema = new Schema(
   {
     slug: { type: String, required: true, unique: true },
@@ -21,7 +21,6 @@ const questSchema = new Schema(
     description: { type: String, default: '' },
     goal: { type: goalSchema, required: true },
     rewardXp: { type: Number, default: 0, min: 0 },
-    reward: { type: Schema.Types.ObjectId, ref: 'Reward', default: null },
     active: { type: Boolean, default: true },
     sortOrder: { type: Number, default: 0 },
   },

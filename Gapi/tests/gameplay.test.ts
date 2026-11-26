@@ -31,12 +31,12 @@ describe('spots, check-ins, quests, leaderboards', () => {
     expect(res.body.data.message).toMatch(/Get closer/);
   });
 
-  it('verifies a close check-in: XP (×2 Welcome Week), quest progress, leaderboard, cooldown', async () => {
+  it('verifies a close check-in: XP, quest progress, leaderboard, cooldown', async () => {
     const { u, gate } = await setup();
     const res = await u.post('/api/v1/checkins', { spotId: gate.id, ...CENTER, accuracyMeters: 10 });
     expect(res.status).toBe(201);
-    expect(res.body.data.checkin).toMatchObject({ verified: true, xpAwarded: 40, multiplier: 2 });
-    expect(res.body.data.user).toMatchObject({ xp: 40, level: 1 });
+    expect(res.body.data.checkin).toMatchObject({ verified: true, xpAwarded: 20 });
+    expect(res.body.data.user).toMatchObject({ xp: 20, level: 1 });
     const firstSteps = res.body.data.quests.find((q: { title: string }) => q.title === 'First Steps');
     expect(firstSteps).toMatchObject({ completed: true, progress: 1, target: 1 });
 
@@ -45,12 +45,12 @@ describe('spots, check-ins, quests, leaderboards', () => {
     expect(again.body.error.code).toBe('COOLDOWN');
 
     const board = await u.get('/api/v1/leaderboards?period=weekly');
-    expect(board.body.data.me.score).toBe(40);
-    const north = await u.get('/api/v1/leaderboards?period=all_time&region=north-campus');
-    expect(north.body.data.entries.some((e: { isMe: boolean; score: number }) => e.isMe && e.score === 40)).toBe(true);
+    expect(board.body.data.me.score).toBe(20);
+    const allTime = await u.get('/api/v1/leaderboards?period=all_time');
+    expect(allTime.body.data.entries.some((e: { isMe: boolean; score: number }) => e.isMe && e.score === 20)).toBe(true);
   });
 
-  it('claims a completed quest once: XP + reward in inventory', async () => {
+  it('claims a completed quest once for its XP', async () => {
     const { u, gate } = await setup();
     await u.post('/api/v1/checkins', { spotId: gate.id, ...CENTER });
     const quests = (await u.get('/api/v1/quests')).body.data;
@@ -61,22 +61,10 @@ describe('spots, check-ins, quests, leaderboards', () => {
 
     const claim = await u.post(`/api/v1/quests/${first.id}/claim`);
     expect(claim.status).toBe(200);
-    expect(claim.body.data).toMatchObject({ xpAwarded: 50, reward: { name: 'Newcomer', type: 'badge' }, user: { xp: 90 } });
+    expect(claim.body.data).toMatchObject({ xpAwarded: 50, user: { xp: 70 } });
     expect((await u.post(`/api/v1/quests/${first.id}/claim`)).body.error.code).toBe('ALREADY_CLAIMED');
-    // Reward avatars are locked until owned; free avatars always work.
-    expect((await u.patch('/api/v1/users/me', { avatar: 'avatar-cafe' })).status).toBe(403);
+    // Only the built-in avatars can be picked.
+    expect((await u.patch('/api/v1/users/me', { avatar: 'avatar-cafe' })).status).toBe(400);
     expect((await u.patch('/api/v1/users/me', { avatar: 'avatar-5' })).body.data.avatar).toBe('avatar-5');
-    const inv = await u.get('/api/v1/inventory');
-    expect(inv.body.data).toEqual([expect.objectContaining({ qty: 1, reward: expect.objectContaining({ slug: 'newcomer-badge' }) })]);
-  });
-
-  it('finds the region for a point and lists events', async () => {
-    const { u } = await setup();
-    const north = await u.get(`/api/v1/regions/at?lat=${offsetMeters(CENTER, 100, 0).lat}&lng=${CENTER.lng}`);
-    expect(north.body.data.slug).toBe('north-campus');
-    const south = await u.get(`/api/v1/regions/at?lat=${offsetMeters(CENTER, -100, 0).lat}&lng=${CENTER.lng}`);
-    expect(south.body.data.slug).toBe('south-campus');
-    const events = (await u.get('/api/v1/events')).body.data;
-    expect(events.find((e: { slug: string }) => e.slug === 'welcome-week')).toMatchObject({ isActive: true, xpMultiplier: 2 });
   });
 });

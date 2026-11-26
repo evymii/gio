@@ -88,7 +88,7 @@ struct ArrowBadge: View {
     }
 }
 
-/// Person avatar as a line badge: color from avatar id, initial (or special glyph).
+/// Person avatar as a line badge: color from avatar id, initial.
 struct AvatarView: View {
     let avatar: String
     let name: String
@@ -97,22 +97,15 @@ struct AvatarView: View {
 
     static let palette: [Color] = [Theme.Colors.lavender, Theme.Colors.teal, Theme.Colors.pink, Theme.Colors.yellow,
                                    Theme.Colors.orange, Theme.Colors.sky, Theme.Colors.lime, Theme.Colors.beige]
-    static let special: [String: (symbol: String, color: Color)] = [
-        "avatar-cafe": ("cup.and.saucer.fill", Theme.Colors.orange),
-    ]
     static let free = (1...8).map { "avatar-\($0)" }
 
     var color: Color {
-        if let s = Self.special[avatar] { return s.color }
         let n = Int(avatar.split(separator: "-").last ?? "") ?? avatar.unicodeScalars.reduce(0) { $0 + Int($1.value) }
         return Self.palette[(max(n, 1) - 1) % Self.palette.count]
     }
 
     var body: some View {
-        Group {
-            if let s = Self.special[avatar] { LineBadge(icon: s.symbol, color: s.color, size: size) }
-            else { LineBadge(String(name.prefix(1)).uppercased(), color: color, size: size) }
-        }
+        LineBadge(String(name.prefix(1)).uppercased(), color: color, size: size)
         .overlay(alignment: .bottomTrailing) {
             if let online {
                 Circle().fill(online ? Theme.Colors.green : Theme.Colors.textSecondary)

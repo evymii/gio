@@ -24,7 +24,6 @@ extension AppEnvironment {
 /// Short text for a check-in outcome, including quests it advanced.
 func summary(of r: CheckinResult) -> String {
     var lines = [r.message]
-    if r.checkin.multiplier > 1 { lines.append("Event bonus ×\(r.checkin.multiplier.formatted())") }
     if r.user?.leveledUp == true, let level = r.user?.level { lines.append("Level up! You're now level \(level).") }
     for q in r.quests where q.completed { lines.append("Quest complete: \(q.title) — claim it on Home.") }
     return lines.joined(separator: "\n")

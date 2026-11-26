@@ -1,15 +1,13 @@
 import { Types } from 'mongoose';
 import { ApiError } from '../../utils/ApiError.js';
-import { InventoryItem, Reward } from '../rewards/reward.model.js';
 import { awardXp } from '../users/xp.service.js';
 import { Quest, UserQuest } from './quest.model.js';
 
 type SpotForProgress = { _id: Types.ObjectId; type: string };
 
 export function toQuestDTO(
-  q: { _id: unknown; slug: string; title: string; description?: string | null; goal: { type: string; target: number; spotType?: string | null }; rewardXp: number; reward?: unknown },
+  q: { _id: unknown; slug: string; title: string; description?: string | null; goal: { type: string; target: number; spotType?: string | null }; rewardXp: number },
   uq?: { progress: number; status: string; completedAt?: Date | null; claimedAt?: Date | null } | null,
-  reward?: { _id: unknown; name: string; type: string; icon: string } | null,
 ) {
   return {
     id: String(q._id),
@@ -18,7 +16,6 @@ export function toQuestDTO(
     description: q.description ?? '',
     goal: { type: q.goal.type, target: q.goal.target, spotType: q.goal.spotType ?? null },
     rewardXp: q.rewardXp,
-    reward: reward ? { id: String(reward._id), name: reward.name, type: reward.type, icon: reward.icon } : null,
     progress: Math.min(uq?.progress ?? 0, q.goal.target),
     status: uq?.status ?? 'in_progress',
     completedAt: uq?.completedAt?.toISOString() ?? null,
@@ -29,11 +26,11 @@ export function toQuestDTO(
 /** All active quests with your progress. */
 export async function questsFor(userId: string) {
   const [quests, mine] = await Promise.all([
-    Quest.find({ active: true }).sort({ sortOrder: 1 }).populate<{ reward: { _id: unknown; name: string; type: string; icon: string } | null }>('reward'),
+    Quest.find({ active: true }).sort({ sortOrder: 1 }),
     UserQuest.find({ user: userId }),
   ]);
   const byQuest = new Map(mine.map((u) => [String(u.quest), u]));
-  return quests.map((q) => toQuestDTO(q, byQuest.get(String(q._id)), q.reward));
+  return quests.map((q) => toQuestDTO(q, byQuest.get(String(q._id))));
 }
 
 /** Advances every active quest a verified check-in counts toward. Returns the quests that changed. */
@@ -70,7 +67,7 @@ export async function recordCheckinProgress(userId: Types.ObjectId, spot: SpotFo
   return changed;
 }
 
-/** Claim a completed quest: grants its XP and puts its reward in your inventory. */
+/** Claim a completed quest: grants its XP. */
 export async function claimQuest(userId: string, questId: string) {
   const quest = await Quest.findById(questId);
   if (!quest) throw ApiError.notFound('Quest not found');
@@ -85,14 +82,5 @@ export async function claimQuest(userId: string, questId: string) {
     throw ApiError.conflict('Quest not completed yet', 'NOT_COMPLETED');
   }
   const xp = await awardXp(userId, quest.rewardXp);
-  const r = quest.reward ? await Reward.findById(quest.reward) : null;
-  if (r) {
-    await InventoryItem.findOneAndUpdate(
-      { user: userId, reward: r._id },
-      { $inc: { qty: 1 }, $set: { claimedAt: new Date() } },
-      { upsert: true, new: true },
-    );
-  }
-  const dto = toQuestDTO(quest, uq, r);
-  return { quest: dto, xpAwarded: quest.rewardXp, user: xp, reward: dto.reward };
+  return { quest: toQuestDTO(quest, uq), xpAwarded: quest.rewardXp, user: xp };
 }

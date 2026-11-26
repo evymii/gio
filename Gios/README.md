@@ -26,10 +26,10 @@ Splash → session restored from the Keychain → **Log in / Sign up** → tabs:
 
 | Tab | What's there |
 |---|---|
-| **Home** | Level + XP, active event, stats, nearby spots (check in), quests (claim), friends online, weekly rank → leaderboard |
+| **Home** | Level + XP, stats, nearby spots (check in), quests (claim), friends online, weekly rank → leaderboard |
 | **Map** | Spots with check-in radius, friends sharing their location, you. Tap a spot to check in. Refreshes every 30 s. |
 | **Friends** | Incoming requests (accept/decline), friends with online status, sent requests, search to add |
-| **Profile** | Location sharing toggle (ghost mode), permission, inventory, leaderboard, server status, log out |
+| **Profile** | Location sharing toggle (ghost mode), permission, check-in calendar, leaderboard, server status, log out |
 
 ## Structure
 

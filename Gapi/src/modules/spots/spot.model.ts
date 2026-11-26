@@ -15,7 +15,6 @@ const spotSchema = new Schema(
     radiusMeters: { type: Number, required: true, min: 10, max: 500 },
     rewardXp: { type: Number, required: true, min: 0 },
     active: { type: Boolean, default: true },
-    region: { type: Schema.Types.ObjectId, ref: 'Region', default: null },
   },
   { timestamps: true, collection: 'spots' },
 );

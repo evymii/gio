@@ -6,7 +6,6 @@ struct EditProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
     @State private var avatar = ""
-    @State private var unlocked: [String] = []
     @State private var saving = false
     @State private var error: String?
 
@@ -28,7 +27,7 @@ struct EditProfileView: View {
                     Spacer()
                 }
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 12) {
-                    ForEach(AvatarView.free + unlocked, id: \.self) { id in
+                    ForEach(AvatarView.free, id: \.self) { id in
                         Button { avatar = id } label: {
                             AvatarView(avatar: id, name: trimmed.isEmpty ? "?" : trimmed, size: 70)
                                 .overlay(Circle().strokeBorder(.white, lineWidth: avatar == id ? 4 : 0).padding(-6))
@@ -58,8 +57,6 @@ struct EditProfileView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             if let me = env.session.me { name = me.name; avatar = me.avatar }
-            let inv = (try? await env.api.inventory()) ?? []
-            unlocked = inv.filter { $0.reward.type == "avatar" }.map(\.reward.value)
         }
         .errorAlert("Couldn't save", message: $error)
     }

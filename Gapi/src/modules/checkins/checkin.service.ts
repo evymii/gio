@@ -1,7 +1,6 @@
 import { Types } from 'mongoose';
 import { distanceMeters, fromPoint, toPoint, type LatLng } from '../../lib/geo.js';
 import { ApiError } from '../../utils/ApiError.js';
-import { xpMultiplier } from '../events/event.service.js';
 import { recordCheckinProgress } from '../quests/quest.service.js';
 import { toSpotDTO } from '../spots/spot.dto.js';
 import { Spot } from '../spots/spot.model.js';
@@ -43,8 +42,7 @@ export async function checkIn(userId: string, input: CheckinInput) {
     }
   }
 
-  const multiplier = verified ? await xpMultiplier(spot.region ?? null) : 1;
-  const xpAwarded = verified ? Math.round(spot.rewardXp * multiplier) : 0;
+  const xpAwarded = verified ? spot.rewardXp : 0;
 
   const checkin = await Checkin.create({
     user: me,
@@ -63,7 +61,6 @@ export async function checkIn(userId: string, input: CheckinInput) {
       distanceMeters: checkin.distanceMeters,
       verified,
       xpAwarded,
-      multiplier,
       createdAt: checkin.createdAt.toISOString(),
     },
     user: null as null | { xp: number; level: number; leveledUp: boolean },
@@ -71,7 +68,7 @@ export async function checkIn(userId: string, input: CheckinInput) {
     message: verified ? `+${xpAwarded} XP at ${spot.name}` : `Get closer — you're ${Math.round(distance)} m away (need ${spot.radiusMeters} m)`,
   };
   if (verified) {
-    result.user = await awardXp(me, xpAwarded, spot.region ?? null);
+    result.user = await awardXp(me, xpAwarded);
     result.quests = await recordCheckinProgress(me, { _id: spot._id, type: spot.type });
   }
   return result;

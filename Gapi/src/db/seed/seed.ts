@@ -1,29 +1,24 @@
 import { Types } from 'mongoose';
 import { env } from '../../config/env.js';
-import { geohash, offsetMeters, squarePolygon, toPoint, type LatLng } from '../../lib/geo.js';
+import { geohash, offsetMeters, toPoint, type LatLng } from '../../lib/geo.js';
 import { levelForXp } from '../../lib/levels.js';
 import { ALL_TIME, isoWeekKey } from '../../lib/periods.js';
 import { Session } from '../../modules/auth/session.model.js';
 import { hashPassword } from '../../modules/auth/auth.service.js';
 import { Checkin } from '../../modules/checkins/checkin.model.js';
-import { Device } from '../../modules/devices/device.model.js';
-import { GameEvent } from '../../modules/events/event.model.js';
 import { Friendship } from '../../modules/friends/friendship.model.js';
 import { LeaderboardEntry } from '../../modules/leaderboards/leaderboard.model.js';
 import { UserLocation } from '../../modules/locations/userLocation.model.js';
 import { Quest, UserQuest } from '../../modules/quests/quest.model.js';
-import { Region } from '../../modules/regions/region.model.js';
-import { InventoryItem, Reward } from '../../modules/rewards/reward.model.js';
 import { Spot } from '../../modules/spots/spot.model.js';
 import { User } from '../../modules/users/user.model.js';
 import * as data from './data.js';
 
-// Typed loosely: a union of 14 model types is too complex for TypeScript to call methods on.
+// Typed loosely: a union of model types is too complex for TypeScript to call methods on.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyModel = import('mongoose').Model<any>;
 export const ALL_MODELS: AnyModel[] = [
-  User, Session, Device, UserLocation, Friendship, Region, Spot, Checkin,
-  Quest, UserQuest, Reward, InventoryItem, LeaderboardEntry, GameEvent,
+  User, Session, UserLocation, Friendship, Spot, Checkin, Quest, UserQuest, LeaderboardEntry,
 ];
 
 export interface SeedOptions {
@@ -36,8 +31,7 @@ export interface SeedOptions {
 const emailFor = (key: string) => `${key}@${data.SEED_EMAIL_DOMAIN}`;
 
 /**
- * Creates every collection + index, upserts the catalog (regions, spots,
- * rewards, quests, events) and rebuilds the demo users' activity.
+ * Creates every collection + index, upserts the catalog (spots, quests) and rebuilds the demo users' activity.
  * Idempotent. Real (non-demo) users and their data are never touched.
  */
 export async function runSeed(opts: SeedOptions = {}) {
@@ -52,43 +46,24 @@ export async function runSeed(opts: SeedOptions = {}) {
   }
 
   if (opts.reset) {
-    await Promise.all(([Region, Spot, Reward, Quest, GameEvent] as AnyModel[]).map((m) => m.deleteMany({})));
+    await Promise.all(([Spot, Quest] as AnyModel[]).map((m) => m.deleteMany({})));
   }
 
   // ---- catalog ------------------------------------------------------------
-  const regionIds = new Map<string, Types.ObjectId>();
-  for (const r of data.regions) {
-    const doc = await Region.findOneAndUpdate(
-      { slug: r.slug },
-      { $set: { name: r.name, area: squarePolygon(at(r.center.north, r.center.east), r.halfSize) } },
-      { upsert: true, new: true },
-    );
-    regionIds.set(r.slug, doc._id);
-  }
-  const regionForOffset = (north: number) => regionIds.get(north >= data.REGION_BORDER_NORTH ? 'north-campus' : 'south-campus')!;
-
-  const spotDocs = new Map<string, { _id: Types.ObjectId; type: string; rewardXp: number; region: Types.ObjectId; pos: LatLng }>();
+  const spotDocs = new Map<string, { _id: Types.ObjectId; type: string; rewardXp: number; pos: LatLng }>();
   for (const s of data.spots) {
     const pos = at(s.north, s.east);
-    const region = regionForOffset(s.north);
     const doc = await Spot.findOneAndUpdate(
       { slug: s.slug },
       {
         $set: {
           name: s.name, type: s.type, description: s.description, point: toPoint(pos), geohash: geohash(pos),
-          radiusMeters: s.radiusMeters, rewardXp: s.rewardXp, active: true, region,
+          radiusMeters: s.radiusMeters, rewardXp: s.rewardXp, active: true,
         },
       },
       { upsert: true, new: true },
     );
-    spotDocs.set(s.slug, { _id: doc._id, type: s.type, rewardXp: s.rewardXp, region, pos });
-  }
-
-  const rewardIds = new Map<string, Types.ObjectId>();
-  for (const r of data.rewards) {
-    const { slug, ...rest } = r;
-    const doc = await Reward.findOneAndUpdate({ slug }, { $set: rest }, { upsert: true, new: true });
-    rewardIds.set(slug, doc._id);
+    spotDocs.set(s.slug, { _id: doc._id, type: s.type, rewardXp: s.rewardXp, pos });
   }
 
   const questDocs = data.quests.map((q, i) => ({ ...q, sortOrder: i }));
@@ -100,26 +75,12 @@ export async function runSeed(opts: SeedOptions = {}) {
         $set: {
           title: q.title, description: q.description,
           goal: { type: q.goal.type, target: q.goal.target, spotType: 'spotType' in q.goal ? q.goal.spotType : null },
-          rewardXp: q.rewardXp, reward: rewardIds.get(q.reward) ?? null, active: true, sortOrder: q.sortOrder,
+          rewardXp: q.rewardXp, active: true, sortOrder: q.sortOrder,
         },
       },
       { upsert: true, new: true },
     );
     questIds.set(q.slug, doc._id);
-  }
-
-  for (const e of data.events) {
-    const startsAt = new Date(now.getTime() + e.startsInDays * 86_400_000);
-    await GameEvent.findOneAndUpdate(
-      { slug: e.slug },
-      {
-        $set: {
-          title: e.title, description: e.description, region: e.region ? regionIds.get(e.region) : null,
-          startsAt, endsAt: new Date(startsAt.getTime() + e.durationDays * 86_400_000), xpMultiplier: e.xpMultiplier,
-        },
-      },
-      { upsert: true, new: true },
-    );
   }
 
   // ---- demo users: wipe their activity, then rebuild it --------------------
@@ -138,9 +99,7 @@ export async function runSeed(opts: SeedOptions = {}) {
     Checkin.deleteMany({ user: { $in: ids } }),
     UserLocation.deleteMany({ user: { $in: ids } }),
     UserQuest.deleteMany({ user: { $in: ids } }),
-    InventoryItem.deleteMany({ user: { $in: ids } }),
     LeaderboardEntry.deleteMany({ user: { $in: ids } }),
-    Device.deleteMany({ user: { $in: ids } }),
     Friendship.deleteMany({ user: { $in: ids }, friend: { $in: ids } }),
   ]);
 
@@ -170,17 +129,13 @@ export async function runSeed(opts: SeedOptions = {}) {
     );
   }
 
-  await Device.create({ user: userIds.get('demo'), deviceId: 'seed-demo-iphone', platform: 'ios', locationPermission: 'when_in_use', appVersion: '0.1.0' });
-
   // Check-ins → XP, leaderboards, quest progress (replayed in time order, same rules as the API).
   const xp = new Map<string, number>();
-  const board = new Map<string, number>(); // `${user}|${region|null}|${period}` → score
-  const addScore = (user: Types.ObjectId, region: Types.ObjectId | null, when: Date, amount: number) => {
-    for (const r of region ? [null, region] : [null]) {
-      for (const p of [ALL_TIME, isoWeekKey(when)]) {
-        const k = `${user}|${r ?? 'null'}|${p}`;
-        board.set(k, (board.get(k) ?? 0) + amount);
-      }
+  const board = new Map<string, number>(); // `${user}|${period}` → score
+  const addScore = (user: Types.ObjectId, when: Date, amount: number) => {
+    for (const p of [ALL_TIME, isoWeekKey(when)]) {
+      const k = `${user}|${p}`;
+      board.set(k, (board.get(k) ?? 0) + amount);
     }
     xp.set(String(user), (xp.get(String(user)) ?? 0) + amount);
   };
@@ -205,7 +160,7 @@ export async function runSeed(opts: SeedOptions = {}) {
       user, spot: spot._id, point: toPoint(pos), accuracyMeters: 10, distanceMeters: 7, verified: true,
       xpAwarded: spot.rewardXp, createdAt: c.when, updatedAt: c.when,
     });
-    addScore(user, spot.region, c.when, spot.rewardXp);
+    addScore(user, c.when, spot.rewardXp);
 
     for (const q of questDocs) {
       const matches = q.goal.type !== 'spot_type' || ('spotType' in q.goal && q.goal.spotType === spot.type);
@@ -224,7 +179,6 @@ export async function runSeed(opts: SeedOptions = {}) {
   await Checkin.insertMany(checkinDocs, { timestamps: false } as never);
 
   const userQuestDocs = [];
-  const inventory = new Map<string, { user: Types.ObjectId; reward: Types.ObjectId; qty: number; claimedAt: Date }>();
   for (const [k, p] of progress) {
     const [userStr, slug] = k.split('|');
     const quest = questDocs.find((q) => q.slug === slug)!;
@@ -237,22 +191,14 @@ export async function runSeed(opts: SeedOptions = {}) {
       visitedSpots: [...p.visited].map((s) => new Types.ObjectId(s)),
       completedAt: p.completedAt, claimedAt: claim ? p.completedAt : null,
     });
-    if (claim && p.completedAt) {
-      addScore(user, null, p.completedAt, quest.rewardXp);
-      const reward = rewardIds.get(quest.reward)!;
-      const ik = `${user}|${reward}`;
-      const item = inventory.get(ik) ?? { user, reward, qty: 0, claimedAt: p.completedAt };
-      item.qty += 1;
-      inventory.set(ik, item);
-    }
+    if (claim && p.completedAt) addScore(user, p.completedAt, quest.rewardXp);
   }
   if (userQuestDocs.length) await UserQuest.insertMany(userQuestDocs);
-  if (inventory.size) await InventoryItem.insertMany([...inventory.values()]);
 
   await LeaderboardEntry.insertMany(
     [...board].map(([k, score]) => {
-      const [user, region, period] = k.split('|');
-      return { user: new Types.ObjectId(user), region: region === 'null' ? null : new Types.ObjectId(region), period, score };
+      const [user, period] = k.split('|');
+      return { user: new Types.ObjectId(user), period, score };
     }),
   );
   await User.bulkWrite(

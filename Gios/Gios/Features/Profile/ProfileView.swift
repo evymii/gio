@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// You: big numbers, sharing / ghost mode, check-in calendar, rewards, links, log out.
+/// You: big numbers, sharing / ghost mode, check-in calendar, links, log out.
 struct ProfileView: View {
     @Environment(AppEnvironment.self) private var env
-    @State private var inventory: [InventoryEntry] = []
     @State private var history: [CheckinHistoryItem] = []
     @State private var health: Health?
     @State private var savingSharing = false
@@ -23,7 +22,6 @@ struct ProfileView: View {
                     sharing(me).appear(delay: 0.1)
                 }
                 Card { DotCalendar(month: .now, counts: counts) }.appear(delay: 0.15)
-                rewards
                 links
                 server
                 Button("Log out") { confirmLogout = true }
@@ -99,30 +97,11 @@ struct ProfileView: View {
         .accessibilityHint("Double tap to toggle")
     }
 
-    private var rewards: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            SectionHeader(title: "Rewards", subtitle: "\(inventory.count) earned") { NavigationLink("See all") { RewardsView() } }
-            if inventory.isEmpty {
-                Card { Text("Complete quests to earn badges.").font(Theme.Fonts.body).foregroundStyle(Theme.Colors.textSecondary) }
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        ForEach(Array(inventory.enumerated()), id: \.element.id) { i, item in
-                            RewardTile(reward: item.reward, owned: true, qty: item.qty, color: Theme.Colors.cycled(i + 2))
-                                .frame(width: 150)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private var links: some View {
         VStack(spacing: 8) {
             link("Check-ins", "history", Theme.Colors.pink, "\(history.count)") { CheckinHistoryView() }
             link("Quests", "goals", Theme.Colors.teal, nil) { QuestsView() }
             link("Leaderboard", "rank", Theme.Colors.yellow, nil) { LeaderboardView() }
-            link("Events", "bonus XP", Theme.Colors.red, nil) { EventsView() }
             link("All spots", "campus guide", Theme.Colors.lavender, nil) { SpotsListView() }
         }
     }
@@ -159,10 +138,8 @@ struct ProfileView: View {
     }
 
     private func load() async {
-        async let inv = try? env.api.inventory()
         async let h = try? env.api.health()
         async let hist = try? env.api.checkinHistory(limit: 100)
-        inventory = await inv ?? []
         health = await h
         history = await hist ?? []
         await env.session.refreshMe()
