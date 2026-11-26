@@ -1,6 +1,6 @@
 import Foundation
 
-/// API base URL: build setting (Debug → localhost, Release → deployed), overridable at runtime.
+/// API base URL: build setting (the deployed Gapi on Render), overridable at runtime.
 final class AppConfig: @unchecked Sendable {
     private static let overrideKey = "gapi.baseURL.override"
     private let defaults: UserDefaults
@@ -17,6 +17,6 @@ final class AppConfig: @unchecked Sendable {
     init(bundle: Bundle = .main, defaults: UserDefaults = .standard) {
         self.defaults = defaults
         let raw = bundle.object(forInfoDictionaryKey: "GAPI_BASE_URL") as? String
-        buildBaseURL = raw.flatMap(URL.init(string:)) ?? URL(string: "http://localhost:8080")!
+        buildBaseURL = raw.flatMap(URL.init(string:)) ?? URL(string: "https://gio-wbqj.onrender.com")!
     }
 }

@@ -23,11 +23,11 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
       configs:
-        # Where the app talks to Gapi. Debug → your Mac; Release → the deployed API.
+        # Where the app talks to Gapi: the deployed API on Render (free tier sleeps; first request can take ~50 s).
         Debug:
-          GAPI_BASE_URL: "http:/$()/localhost:8080"
+          GAPI_BASE_URL: "https:/$()/gio-wbqj.onrender.com"
         Release:
-          GAPI_BASE_URL: "https:/$()/gapi.onrender.com"
+          GAPI_BASE_URL: "https:/$()/gio-wbqj.onrender.com"
     info:
       path: Gios/Resources/Info.plist
       properties:

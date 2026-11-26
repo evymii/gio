@@ -60,7 +60,7 @@ final class APIClient: @unchecked Sendable {
         var components = URLComponents(url: baseURL.appending(path: path), resolvingAgainstBaseURL: false)!
         let items = query.compactMap { k, v in v.map { URLQueryItem(name: k, value: $0) } }.sorted { $0.name < $1.name }
         if !items.isEmpty { components.queryItems = items }
-        var request = URLRequest(url: components.url!, timeoutInterval: 20)
+        var request = URLRequest(url: components.url!, timeoutInterval: 60) // Render's free tier can take ~50 s to wake
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         if let body {

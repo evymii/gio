@@ -12,11 +12,11 @@ xcodegen generate             # rerun after adding/removing files
 open Gios.xcodeproj           # pick an iPhone simulator → Cmd+R
 ```
 
-1. Start Gapi first: `npm run dev` in `Gapi` (port 8080).
+1. Gapi is deployed at https://gio-wbqj.onrender.com — nothing to run locally. The first request after ~15 min idle takes up to a minute while Render wakes it.
 2. Give the simulator a location on campus. Either run `xcrun simctl location booted set 37.3349,-122.0090`, or use **Features → Location → Apple** in the Simulator menu.
 3. Log in with **Use demo account** (demo@gios.app / campus123), or sign up.
 
-Debug builds talk to `http://localhost:8080`, and Release builds talk to the deployed API (set in `project.yml`). On a real iPhone, `localhost` doesn't reach your Mac, so use your Mac's IP address instead.
+Debug and Release builds both talk to the deployed API (set in `project.yml`).
 
 Debug-only launch flags for QA and screenshots: `-demoLogin` (signs in the demo account) and `-tab 0…3` (opens a tab).
 

@@ -538,7 +538,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
-				GAPI_BASE_URL = "http:/$()/localhost:8080";
+				GAPI_BASE_URL = "https:/$()/gio-wbqj.onrender.com";
 				INFOPLIST_FILE = Gios/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -616,7 +616,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
-				GAPI_BASE_URL = "https:/$()/gapi.onrender.com";
+				GAPI_BASE_URL = "https:/$()/gio-wbqj.onrender.com";
 				INFOPLIST_FILE = Gios/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
