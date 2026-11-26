@@ -1,0 +1,10 @@
+# Local backups and secrets — never commit
+_archive/
+.env
+.env.*
+!.env.example
+GoogleService-Info.plist
+
+# OS / editor
+.DS_Store
+.claude/settings.local.json
