@@ -1,8 +1,11 @@
-# Render Blueprint — Render → New → Blueprint → pick this repo.
+# Render Blueprint — Render → New → Blueprint → pick this repo. Gapi lives in Gapi/.
 services:
   - type: web
     name: gapi
     runtime: node
+    rootDir: Gapi
+    buildFilter:
+      paths: ['Gapi/**']
     plan: free
     region: singapore
     branch: main

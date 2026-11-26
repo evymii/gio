@@ -1,8 +1,13 @@
-name: CI
+name: Gapi CI
 on:
   push:
     branches: [main]
+    paths: ['Gapi/**', '.github/workflows/gapi-ci.yml']
   pull_request:
+    paths: ['Gapi/**']
+defaults:
+  run:
+    working-directory: Gapi
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -10,8 +15,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version-file: .nvmrc
+          node-version-file: Gapi/.nvmrc
           cache: npm
+          cache-dependency-path: Gapi/package-lock.json
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
