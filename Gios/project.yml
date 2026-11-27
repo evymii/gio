@@ -54,6 +54,8 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         # Crashlytics needs dSYMs (Debug too, so simulator test crashes are readable) and an unsandboxed upload script.
         DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+        # Keep all code in the main binary (no Gios.debug.dylib) so the dSYM upload covers every crash frame.
+        ENABLE_DEBUG_DYLIB: NO
         ENABLE_USER_SCRIPT_SANDBOXING: NO
       configs:
         # Where the app talks to Gapi: the deployed API on Render (free tier sleeps; first request can take ~50 s).
@@ -65,6 +67,8 @@ targets:
       path: Gios/Resources/Info.plist
       properties:
         CFBundleDisplayName: Gios
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         GAPI_BASE_URL: $(GAPI_BASE_URL)
         ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
