@@ -27,6 +27,7 @@ struct DashboardView: View {
         .pageBackground()
         .toolbar(.hidden, for: .navigationBar)
         .task { await model.load(env) }
+        .onAppear { Telemetry.log(.homeOpen) }
         .refreshable { await model.load(env) }
         .onChange(of: env.location.location == nil) { _, isNil in if !isNil { Task { await model.load(env) } } }
         .sheet(item: $selected) { spot in

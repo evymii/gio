@@ -15,6 +15,8 @@ enum Telemetry {
         case friendRequest
         case friendAccept
         case mapOpen(spots: Int, friendsOnline: Int)
+        /// Home shown to a signed-in player — the trigger to use for In-App Messaging campaigns.
+        case homeOpen
 
         var name: String {
             switch self {
@@ -25,6 +27,7 @@ enum Telemetry {
             case .friendRequest: "friend_request"
             case .friendAccept: "friend_accept"
             case .mapOpen: "map_open"
+            case .homeOpen: "home_open"
             }
         }
 
@@ -34,7 +37,7 @@ enum Telemetry {
             case let .checkIn(type, verified, xp): ["spot_type": type, "verified": verified ? 1 : 0, "xp": xp]
             case let .levelUp(level): [AnalyticsParameterLevel: level]
             case let .questClaim(quest, xp): ["quest": quest, "xp": xp]
-            case .friendRequest, .friendAccept: [:]
+            case .friendRequest, .friendAccept, .homeOpen: [:]
             case let .mapOpen(spots, online): ["spots": spots, "friends_online": online]
             }
         }
