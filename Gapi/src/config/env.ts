@@ -15,6 +15,8 @@ const EnvSchema = z
     SEED_LAT: z.coerce.number().min(-90).max(90).default(37.3349),
     SEED_LNG: z.coerce.number().min(-180).max(180).default(-122.009),
     SEED_PASSWORD: z.string().min(6).default('campus123'),
+    /** Firebase project whose phone-auth ID tokens we accept (not a secret). */
+    FIREBASE_PROJECT_ID: z.string().min(1).default('gio-game-a335a'),
   })
   .transform((e, ctx) => {
     if (!e.JWT_SECRET && e.NODE_ENV === 'production') {

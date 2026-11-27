@@ -13,6 +13,8 @@ final class SessionStore {
     }
 
     private(set) var state: State = .loading
+    /// A brand-new phone account: show the "pick a name & look" step once.
+    var needsProfile = false
     private let api: APIClient
     private let tokens: TokenStore
 
@@ -45,6 +47,13 @@ final class SessionStore {
         try await finish(api.signup(name: name, email: email, password: password))
     }
 
+    /// Phone sign-in: Firebase verified the number; Gapi turns that into a session.
+    func loginWithFirebase(idToken: String) async throws {
+        let auth = try await api.firebaseLogin(idToken: idToken)
+        needsProfile = auth.isNew == true
+        await finish(auth)
+    }
+
     private func finish(_ auth: AuthResponse) async {
         await tokens.set(access: auth.accessToken, refresh: auth.refreshToken)
         state = .signedIn(auth.user)
@@ -59,6 +68,8 @@ final class SessionStore {
     func logout() async {
         if let refresh = await tokens.refreshToken { try? await api.logout(refreshToken: refresh) }
         await tokens.clear()
+        PhoneAuth.signOut()
+        needsProfile = false
         state = .signedOut
     }
 

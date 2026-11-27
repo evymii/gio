@@ -60,7 +60,7 @@ struct FriendsView: View {
     private var searchField: some View {
         FieldBox(icon: "magnifyingglass") {
             HStack {
-                TextField("Find by name or email", text: $query)
+                TextField("Find by name or phone", text: $query)
                     .textInputAutocapitalization(.never).autocorrectionDisabled().focused($searching)
                 if !query.isEmpty {
                     Button { query = ""; searching = false } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.Colors.textSecondary) }

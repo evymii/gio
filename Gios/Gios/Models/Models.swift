@@ -6,7 +6,8 @@ import Foundation
 struct Me: Codable, Hashable, Sendable {
     let id: String
     let name: String
-    let email: String
+    let email: String?
+    let phone: String?
     let avatar: String
     let level: Int
     let xp: Int
@@ -16,6 +17,8 @@ struct Me: Codable, Hashable, Sendable {
     let createdAt: Date
 
     var isSharing: Bool { locationSharing == "friends" }
+    /// Phone for phone sign-ins, email for the demo/email accounts.
+    var contact: String { phone ?? email ?? "" }
     var levelProgress: Double {
         let span = Double(nextLevelXp - levelStartXp)
         return span > 0 ? Double(xp - levelStartXp) / span : 0
@@ -34,6 +37,8 @@ struct AuthResponse: Codable, Sendable {
     let accessToken: String
     let refreshToken: String
     let expiresIn: Int
+    /// Phone sign-in only: true the first time, so the app asks for a name.
+    var isNew: Bool? = nil
 }
 
 struct LatLng: Codable, Hashable, Sendable {

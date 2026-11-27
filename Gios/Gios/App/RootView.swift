@@ -38,6 +38,10 @@ struct RootView: View {
             #endif
             splashDone = true
         }
+        .sheet(isPresented: Bindable(env.session).needsProfile) {
+            NavigationStack { EditProfileView(isWelcome: true) }
+                .interactiveDismissDisabled()
+        }
         .onChange(of: env.session.me?.id) { _, id in
             if id != nil { Task { await env.didSignIn() } }
         }

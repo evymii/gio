@@ -4,6 +4,8 @@ import SwiftUI
 struct EditProfileView: View {
     @Environment(AppEnvironment.self) private var env
     @Environment(\.dismiss) private var dismiss
+    /// Shown once after the first phone sign-in.
+    var isWelcome = false
     @State private var name = ""
     @State private var avatar = ""
     @State private var saving = false
@@ -12,14 +14,14 @@ struct EditProfileView: View {
     private var trimmed: String { name.trimmingCharacters(in: .whitespaces) }
     private var changed: Bool {
         guard let me = env.session.me else { return false }
-        return trimmed != me.name || avatar != me.avatar
+        return isWelcome || trimmed != me.name || avatar != me.avatar
     }
     private var valid: Bool { (2...30).contains(trimmed.count) }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 26) {
-                StackedTitle(primary: "Choose", secondary: "Your Look", size: 44).appear()
+                StackedTitle(primary: isWelcome ? "Welcome!" : "Choose", secondary: isWelcome ? "Pick a name" : "Your Look", size: 44).appear()
                 HStack {
                     Spacer()
                     AvatarView(avatar: avatar, name: trimmed.isEmpty ? "?" : trimmed, size: 120)
@@ -66,6 +68,7 @@ struct EditProfileView: View {
         defer { saving = false }
         do {
             env.session.update(try await env.api.updateMe(name: trimmed, avatar: avatar))
+            env.session.needsProfile = false
             dismiss()
         } catch { self.error = error.localizedDescription }
     }

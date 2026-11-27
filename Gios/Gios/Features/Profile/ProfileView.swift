@@ -45,7 +45,7 @@ struct ProfileView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 14) {
                 AvatarView(avatar: me.avatar, name: me.name, size: 84)
-                StackedTitle(primary: me.name, secondary: me.email, size: 34)
+                StackedTitle(primary: me.name, secondary: me.contact, size: 34)
             }
             Spacer()
             NavigationLink { EditProfileView() } label: {

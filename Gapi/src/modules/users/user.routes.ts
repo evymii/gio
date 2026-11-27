@@ -37,13 +37,13 @@ usersRouter.patch('/me', validate(updateMeSchema), async (req, res) => {
   res.json({ data: toMeDTO(me) });
 });
 
-/** Search by name prefix or exact email (to send a friend request). */
+/** Search by name prefix, exact email or exact phone (to send a friend request). */
 usersRouter.get('/search', validate(searchSchema, 'query'), async (req, res) => {
   const q: string = res.locals.query.q;
   const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const users = await User.find({
     _id: { $ne: req.userId },
-    $or: [{ name: { $regex: `^${escaped}`, $options: 'i' } }, { email: q.toLowerCase() }],
+    $or: [{ name: { $regex: `^${escaped}`, $options: 'i' } }, { email: q.toLowerCase() }, { phone: q.replace(/[\s-]/g, '') }],
   }).limit(10);
   res.json({ data: users.map(toPublicUserDTO) });
 });

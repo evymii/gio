@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { verifyFirebaseIdToken } from '../../lib/firebase.js';
 import { ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_DAYS, hashToken, newRefreshToken, signAccessToken } from '../../lib/tokens.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { toMeDTO } from '../users/user.dto.js';
@@ -36,9 +37,37 @@ export const authService = {
   async login(input: { email: string; password: string }, userAgent: string) {
     const user = await User.findOne({ email: input.email.toLowerCase() }).select('+passwordHash');
     // Same error for unknown email and wrong password — don't reveal which accounts exist.
-    const ok = user ? await bcrypt.compare(input.password, user.passwordHash) : false;
+    const ok = user?.passwordHash ? await bcrypt.compare(input.password, user.passwordHash) : false;
     if (!user || !ok) throw new ApiError(401, 'INVALID_CREDENTIALS', 'Email or password is incorrect');
     return issueTokens(user, userAgent);
+  },
+
+  /**
+   * Phone sign-in: the app signs in with Firebase Auth, then trades the Firebase
+   * ID token for Gapi's own tokens. First time → creates the account (isNew).
+   */
+  async firebase(idToken: string, userAgent: string) {
+    let identity;
+    try {
+      identity = await verifyFirebaseIdToken(idToken);
+    } catch {
+      throw new ApiError(401, 'FIREBASE_TOKEN_INVALID', 'Phone sign-in could not be verified, please try again');
+    }
+    let user = await User.findOne({ firebaseUid: identity.uid });
+    const isNew = !user;
+    if (!user) {
+      const digits = identity.phone?.slice(-4) ?? identity.uid.slice(0, 4);
+      user = await User.create({
+        name: `Player ${digits}`,
+        phone: identity.phone ?? undefined,
+        firebaseUid: identity.uid,
+        avatar: `avatar-${1 + Math.floor(Math.random() * 8)}`,
+      });
+    } else if (identity.phone && user.phone !== identity.phone) {
+      user.phone = identity.phone;
+      await user.save();
+    }
+    return { ...(await issueTokens(user, userAgent)), isNew };
   },
 
   /** Rotates the refresh token: the old one stops working immediately. */

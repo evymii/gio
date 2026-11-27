@@ -17,6 +17,11 @@ extension APIClient {
         return try await send("POST", "api/v1/auth/login", body: Body(email: email, password: password), authed: false)
     }
 
+    /// Trade a Firebase ID token (after phone sign-in) for a Gapi session.
+    func firebaseLogin(idToken: String) async throws -> AuthResponse {
+        try await send("POST", "api/v1/auth/firebase", body: ["idToken": idToken], authed: false)
+    }
+
     func logout(refreshToken: String) async throws {
         try await sendVoid("POST", "api/v1/auth/logout", body: ["refreshToken": refreshToken], authed: false)
     }

@@ -1,15 +1,21 @@
 import SwiftUI
 
-/// Welcome → Sign in / Create account, with push transitions.
+/// Welcome → phone sign-in (main path), or email sign in / create account (demo + legacy accounts).
 struct AuthFlow: View {
-    enum Route: Hashable { case login, signup }
+    enum Route: Hashable { case phone, login, signup }
     @State private var path: [Route] = AuthFlow.initialPath
 
-    /// DEBUG: `-auth login|signup` opens a form directly (screenshots/QA).
+    /// DEBUG: `-auth phone|login|signup` opens a form directly (screenshots/QA).
     private static var initialPath: [Route] {
         #if DEBUG
         let args = ProcessInfo.processInfo.arguments
-        if let i = args.firstIndex(of: "-auth"), i + 1 < args.count { return [args[i + 1] == "signup" ? .signup : .login] }
+        if let i = args.firstIndex(of: "-auth"), i + 1 < args.count {
+            switch args[i + 1] {
+            case "signup": return [.signup]
+            case "login": return [.login]
+            default: return [.phone]
+            }
+        }
         #endif
         return []
     }
@@ -18,8 +24,12 @@ struct AuthFlow: View {
         NavigationStack(path: $path) {
             WelcomeView { path.append($0) }
                 .navigationDestination(for: Route.self) { route in
-                    AuthFormView(mode: route == .login ? .login : .signup) { other in
-                        path = [other == .login ? .login : .signup]
+                    if route == .phone {
+                        PhoneAuthView()
+                    } else {
+                        AuthFormView(mode: route == .login ? .login : .signup) { other in
+                            path = [other == .login ? .login : .signup]
+                        }
                     }
                 }
         }
@@ -38,8 +48,8 @@ struct WelcomeView: View {
                 StackedTitle(primary: "Your campus,", secondary: "together.", size: 40)
                     .appear(delay: 0.4)
                 VStack(spacing: 12) {
-                    Button("Sign in") { go(.login) }.buttonStyle(PillButtonStyle(fill: .white))
-                    Button("Create account") { go(.signup) }.buttonStyle(PillButtonStyle(outlined: true))
+                    Button("Continue with phone") { go(.phone) }.buttonStyle(PillButtonStyle(fill: .white))
+                    Button("Sign in with email") { go(.login) }.buttonStyle(PillButtonStyle(outlined: true))
                 }
                 .appear(delay: 0.5)
             }

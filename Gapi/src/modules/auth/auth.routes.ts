@@ -13,6 +13,7 @@ const signupSchema = z.object({
 });
 const loginSchema = z.object({ email, password: z.string().min(1, 'Required') });
 const refreshSchema = z.object({ refreshToken: z.string().min(20) });
+const firebaseSchema = z.object({ idToken: z.string().min(20).max(4096) });
 
 /** Brute-force protection for credential endpoints. */
 const authLimiter = rateLimit({
@@ -23,7 +24,7 @@ const authLimiter = rateLimit({
   skip: () => env.NODE_ENV === 'test',
 });
 
-/** /api/v1/auth — sign up, log in, refresh, log out. */
+/** /api/v1/auth — phone sign-in (Firebase), email sign up / log in, refresh, log out. */
 export const authRouter = Router();
 const ua = (h: unknown) => (typeof h === 'string' ? h : '');
 
@@ -33,6 +34,10 @@ authRouter.post('/signup', authLimiter, validate(signupSchema), async (req, res)
 
 authRouter.post('/login', authLimiter, validate(loginSchema), async (req, res) => {
   res.json({ data: await authService.login(res.locals.body, ua(req.headers['user-agent'])) });
+});
+
+authRouter.post('/firebase', authLimiter, validate(firebaseSchema), async (req, res) => {
+  res.json({ data: await authService.firebase(res.locals.body.idToken, ua(req.headers['user-agent'])) });
 });
 
 authRouter.post('/refresh', validate(refreshSchema), async (req, res) => {

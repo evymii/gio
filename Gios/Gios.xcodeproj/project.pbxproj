@@ -11,8 +11,10 @@
 		05AE640B996503A46C33C2C5 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FCDB32B93B2BEB556C57FC /* Models.swift */; };
 		18EF69ABAFA0878A4854C5A3 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97B63FCF03F9813958A154E9 /* AppEnvironment.swift */; };
 		192F2022C5D1B9D810EBDB1E /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = B773C9BA158A9DD3B0BB627C /* APIError.swift */; };
+		1AFA0966DF05C484DD3A5232 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = B8698CF4AB6A27D793C0F59E /* FirebaseAuth */; };
 		1ED1B7762710CE85A6DA5F9D /* AppEnvironment+Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF764A9478ED2994F3DF5BA7 /* AppEnvironment+Actions.swift */; };
 		2C591D22247EE6F2D205BC58 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0957DF121F2F01690EB0E530 /* Assets.xcassets */; };
+		312B89F99659F8FC1FEB2201 /* PhoneAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A09289408C41131359B4B3 /* PhoneAuthView.swift */; };
 		32A62185A97AC713316E6F6F /* PillCollage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1180ED3ADCFE800820C30268 /* PillCollage.swift */; };
 		412FC49A92433576CFE2DB12 /* LeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC240BF5F16D1AE267AB04F /* LeaderboardView.swift */; };
 		4735F6AB8409A2574D3FE3AD /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35DF5ECF9BC5A72D29F750B4 /* AppConfig.swift */; };
@@ -22,6 +24,7 @@
 		656C5EE2D5D122E222493D5D /* FriendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B38DE74A14A367B4E0D4315C /* FriendsView.swift */; };
 		6B455216F7440F4E37F206C8 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7D66DDEA9AA4F3EC41EA8CD /* APIClient.swift */; };
 		72FA7D2C2D490E5FE5EFDA6D /* QuestsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17AE7193FD4AF2ADF5C7FB5F /* QuestsView.swift */; };
+		7664411174670BA526EA23CE /* PhoneAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF99599356863288E70F9F0 /* PhoneAuth.swift */; };
 		7F192FA0CD0F11A58B577CB4 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29CDED0D4BBC1E009758ECCD /* LocationService.swift */; };
 		83F24911AC40BC4CA97CD6ED /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8D1074E0683E27E0304C19F /* Keychain.swift */; };
 		8420AC7E09671019CB8F29E8 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7499874E00FE52ABCE7606 /* RootView.swift */; };
@@ -29,6 +32,7 @@
 		9A865FCB6A881658D448943B /* CheckinHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C296EA5167DBA651917541F /* CheckinHistoryView.swift */; };
 		A18B956591977EC8A5664B22 /* CampusMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C32C3DD3C7AF49F618BE49 /* CampusMapView.swift */; };
 		A467C51066F8551BAB1BEE03 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A829F524AA82D7B450EFC4 /* ProfileView.swift */; };
+		AAEC9FDAE1CC7891CFE7E7F5 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CAE0242A991C5EB04BF7D156 /* GoogleService-Info.plist */; };
 		AB06128E184A856F90098FEC /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84C08E3B601E628BABAD824 /* DashboardView.swift */; };
 		BD46455EFDB573EDDF285478 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF24B6C6053B6DD1440A822 /* EditProfileView.swift */; };
 		C15C25490E34B3BC695A193D /* GiosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 032A948C2A27D10056268B00 /* GiosApp.swift */; };
@@ -70,6 +74,8 @@
 		4E79D19726FAE156C2402AE1 /* AuthFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthFlow.swift; sourceTree = "<group>"; };
 		4EEA213563F1EB858970A73C /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		5245B4D9FE3802C856C26E96 /* TokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenStore.swift; sourceTree = "<group>"; };
+		52A09289408C41131359B4B3 /* PhoneAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAuthView.swift; sourceTree = "<group>"; };
+		7AF99599356863288E70F9F0 /* PhoneAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAuth.swift; sourceTree = "<group>"; };
 		97B63FCF03F9813958A154E9 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		AF764A9478ED2994F3DF5BA7 /* AppEnvironment+Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppEnvironment+Actions.swift"; sourceTree = "<group>"; };
 		B0D3A2EEC38D9E2AB5E8810C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -78,6 +84,7 @@
 		BFAE92ACE974783D6C0D54F1 /* LocationSharer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSharer.swift; sourceTree = "<group>"; };
 		C40F95A163B865605B8278D0 /* SpotsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotsListView.swift; sourceTree = "<group>"; };
 		C6CA4B8B8DE310B13577A87D /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		CAE0242A991C5EB04BF7D156 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		D7D66DDEA9AA4F3EC41EA8CD /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		DA7499874E00FE52ABCE7606 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		DAC240BF5F16D1AE267AB04F /* LeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardView.swift; sourceTree = "<group>"; };
@@ -86,6 +93,17 @@
 		F742EB106056B0D83DD9EF93 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		F84C08E3B601E628BABAD824 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		ACEBA71AB07B27DF075EC465 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1AFA0966DF05C484DD3A5232 /* FirebaseAuth in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		04FD93E1FECDC7C9FDF3AAB7 /* Leaderboard */ = {
@@ -110,6 +128,7 @@
 			isa = PBXGroup;
 			children = (
 				E8D1074E0683E27E0304C19F /* Keychain.swift */,
+				7AF99599356863288E70F9F0 /* PhoneAuth.swift */,
 				DC33CAE7A9B5FF0E9B3CFFD4 /* SessionStore.swift */,
 				5245B4D9FE3802C856C26E96 /* TokenStore.swift */,
 			);
@@ -153,6 +172,7 @@
 			isa = PBXGroup;
 			children = (
 				0957DF121F2F01690EB0E530 /* Assets.xcassets */,
+				CAE0242A991C5EB04BF7D156 /* GoogleService-Info.plist */,
 				B0D3A2EEC38D9E2AB5E8810C /* Info.plist */,
 			);
 			path = Resources;
@@ -170,6 +190,7 @@
 			isa = PBXGroup;
 			children = (
 				4E79D19726FAE156C2402AE1 /* AuthFlow.swift */,
+				52A09289408C41131359B4B3 /* PhoneAuthView.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -339,6 +360,7 @@
 			buildPhases = (
 				F3F83024B55770796BA15B79 /* Sources */,
 				95CEB64DDC8DA45C65070155 /* Resources */,
+				ACEBA71AB07B27DF075EC465 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -346,6 +368,7 @@
 			);
 			name = Gios;
 			packageProductDependencies = (
+				B8698CF4AB6A27D793C0F59E /* FirebaseAuth */,
 			);
 			productName = Gios;
 			productReference = 2F011A58629755CD124F10B2 /* Gios.app */;
@@ -371,6 +394,9 @@
 			);
 			mainGroup = FAA3E8AB70E2757D5CD96396;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0C12791FE24FFD27E3438B4E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = BBE79A25EAFA0EA51ADC82E8 /* Products */;
 			projectDirPath = "";
@@ -388,6 +414,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2C591D22247EE6F2D205BC58 /* Assets.xcassets in Resources */,
+				AAEC9FDAE1CC7891CFE7E7F5 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -427,6 +454,8 @@
 				5762D4D865DE675D6FCD3F9E /* LocationSharer.swift in Sources */,
 				E732C89D4A0D245832C7D5BA /* MainTabView.swift in Sources */,
 				05AE640B996503A46C33C2C5 /* Models.swift in Sources */,
+				7664411174670BA526EA23CE /* PhoneAuth.swift in Sources */,
+				312B89F99659F8FC1FEB2201 /* PhoneAuthView.swift in Sources */,
 				32A62185A97AC713316E6F6F /* PillCollage.swift in Sources */,
 				A467C51066F8551BAB1BEE03 /* ProfileView.swift in Sources */,
 				72FA7D2C2D490E5FE5EFDA6D /* QuestsView.swift in Sources */,
@@ -677,6 +706,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0C12791FE24FFD27E3438B4E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B8698CF4AB6A27D793C0F59E /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0C12791FE24FFD27E3438B4E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C60307E47CB19F61B88A97B8 /* Project object */;
 }

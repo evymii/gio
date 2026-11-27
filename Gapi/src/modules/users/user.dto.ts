@@ -8,7 +8,8 @@ export function toMeDTO(u: UserDoc) {
   return {
     id: String(u._id),
     name: u.name,
-    email: u.email,
+    email: u.email ?? null,
+    phone: u.phone ?? null,
     avatar: u.avatar,
     level: lp.level,
     xp: u.xp,
@@ -19,7 +20,7 @@ export function toMeDTO(u: UserDoc) {
   };
 }
 
-/** What other people see (no email, no location). */
+/** What other people see (no email/phone, no location). */
 export function toPublicUserDTO(u: Pick<UserDoc, '_id' | 'name' | 'avatar' | 'xp'>) {
   return { id: String(u._id), name: u.name, avatar: u.avatar, level: levelProgress(u.xp).level };
 }
