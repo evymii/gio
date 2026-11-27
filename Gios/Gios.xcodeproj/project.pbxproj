@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		00CD71FBB4C864D200B622E6 /* TokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5245B4D9FE3802C856C26E96 /* TokenStore.swift */; };
 		05AE640B996503A46C33C2C5 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FCDB32B93B2BEB556C57FC /* Models.swift */; };
+		1157A4634AA8652C0F9BD80F /* FirebaseInAppMessaging-Beta in Frameworks */ = {isa = PBXBuildFile; productRef = 9E4A180CD104A47BC9E84FB3 /* FirebaseInAppMessaging-Beta */; };
+		18999DEFF362712BE52E3AF7 /* InAppMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD0181021B74DC8A105F906 /* InAppMessages.swift */; };
 		18EF69ABAFA0878A4854C5A3 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97B63FCF03F9813958A154E9 /* AppEnvironment.swift */; };
 		192F2022C5D1B9D810EBDB1E /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = B773C9BA158A9DD3B0BB627C /* APIError.swift */; };
 		1AFA0966DF05C484DD3A5232 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = B8698CF4AB6A27D793C0F59E /* FirebaseAuth */; };
@@ -66,6 +68,7 @@
 		1180ED3ADCFE800820C30268 /* PillCollage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PillCollage.swift; sourceTree = "<group>"; };
 		16A829F524AA82D7B450EFC4 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		17AE7193FD4AF2ADF5C7FB5F /* QuestsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestsView.swift; sourceTree = "<group>"; };
+		1FD0181021B74DC8A105F906 /* InAppMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InAppMessages.swift; sourceTree = "<group>"; };
 		1FF24B6C6053B6DD1440A822 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
 		226F1734F6D3818B278AA91C /* GiosTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GiosTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		29CDED0D4BBC1E009758ECCD /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
@@ -110,6 +113,7 @@
 				89FC267B36757F2FF7737360 /* FirebaseAnalytics in Frameworks */,
 				AE269125B28C58A5ECE2C033 /* FirebaseRemoteConfig in Frameworks */,
 				95938272D772D056C5A4692A /* FirebaseCrashlytics in Frameworks */,
+				1157A4634AA8652C0F9BD80F /* FirebaseInAppMessaging-Beta in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -199,6 +203,7 @@
 		39A10D50D2C22F4200BC6FAD /* Firebase */ = {
 			isa = PBXGroup;
 			children = (
+				1FD0181021B74DC8A105F906 /* InAppMessages.swift */,
 				A7319B19884AAE19373E168B /* RemoteSettings.swift */,
 				D3189D686C74251A5677B8DE /* Telemetry.swift */,
 			);
@@ -393,6 +398,7 @@
 				1AD04E8C6A22868D487B5019 /* FirebaseAnalytics */,
 				0B91F8798F14D955B975D1FC /* FirebaseRemoteConfig */,
 				417C8A729D12B353842C00DE /* FirebaseCrashlytics */,
+				9E4A180CD104A47BC9E84FB3 /* FirebaseInAppMessaging-Beta */,
 			);
 			productName = Gios;
 			productReference = 2F011A58629755CD124F10B2 /* Gios.app */;
@@ -499,6 +505,7 @@
 				E0C71D4215638D007D8F1E32 /* Endpoints.swift in Sources */,
 				656C5EE2D5D122E222493D5D /* FriendsView.swift in Sources */,
 				C15C25490E34B3BC695A193D /* GiosApp.swift in Sources */,
+				18999DEFF362712BE52E3AF7 /* InAppMessages.swift in Sources */,
 				83F24911AC40BC4CA97CD6ED /* Keychain.swift in Sources */,
 				412FC49A92433576CFE2DB12 /* LeaderboardView.swift in Sources */,
 				7F192FA0CD0F11A58B577CB4 /* LocationService.swift in Sources */,
@@ -790,6 +797,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0C12791FE24FFD27E3438B4E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCrashlytics;
+		};
+		9E4A180CD104A47BC9E84FB3 /* FirebaseInAppMessaging-Beta */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0C12791FE24FFD27E3438B4E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseInAppMessaging-Beta";
 		};
 		B8698CF4AB6A27D793C0F59E /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;

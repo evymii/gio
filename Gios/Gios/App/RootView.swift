@@ -54,6 +54,9 @@ struct RootView: View {
             NavigationStack { EditProfileView(isWelcome: true) }
                 .interactiveDismissDisabled()
         }
+        .onChange(of: "\(env.session.me?.id ?? "")|\(env.session.needsProfile)", initial: true) {
+            InAppMessages.update(signedIn: env.session.me != nil, onboarding: env.session.needsProfile)
+        }
         .onChange(of: env.session.me?.id) { _, id in
             if id != nil { Task { await env.didSignIn() } }
         }

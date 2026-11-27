@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         #if DEBUG
         // Simulator: the Firebase console's test phone numbers sign in without APNs or reCAPTCHA (and send no SMS).
         Auth.auth().settings?.isAppVerificationDisabledForTesting = true
+        InAppMessages.printInstallationID()
         #endif
         application.registerForRemoteNotifications()
         return true
