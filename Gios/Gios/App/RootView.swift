@@ -35,6 +35,18 @@ struct RootView: View {
             if ProcessInfo.processInfo.arguments.contains("-demoLogin"), env.session.state == .signedOut {
                 try? await env.session.login(email: "demo@gios.app", password: "campus123")
             }
+            // `-phoneLogin` runs the real phone flow with the Firebase console test number (no SMS).
+            if ProcessInfo.processInfo.arguments.contains("-phoneLogin") {
+                if env.session.me != nil { await env.session.logout() }
+                do {
+                    let id = try await PhoneAuth.sendCode(to: "+97699999999")
+                    let token = try await PhoneAuth.confirm(verificationID: id, code: "123456")
+                    try await env.session.loginWithFirebase(idToken: token)
+                    print("QA phoneLogin: signed in, isNew=\(env.session.needsProfile)")
+                } catch {
+                    print("QA phoneLogin failed: \(PhoneAuth.message(for: error))")
+                }
+            }
             #endif
             splashDone = true
         }

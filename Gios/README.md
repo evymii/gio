@@ -18,7 +18,7 @@ open Gios.xcodeproj           # pick an iPhone simulator → Cmd+R
 
 Debug and Release builds both talk to the deployed API (set in `project.yml`).
 
-Debug-only launch flags for QA and screenshots: `-demoLogin` (signs in the demo account) and `-tab 0…3` (opens a tab).
+Debug-only launch flags for QA and screenshots: `-demoLogin` (signs in the demo account), `-phoneLogin` (phone sign-in with the Firebase test number +976 99999999 / 123456) and `-tab 0…3` (opens a tab).
 
 ## User flow
 

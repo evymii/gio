@@ -13,7 +13,29 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         // Simulator: the Firebase console's test phone numbers sign in without APNs or reCAPTCHA (and send no SMS).
         Auth.auth().settings?.isAppVerificationDisabledForTesting = true
         #endif
+        application.registerForRemoteNotifications()
         return true
+    }
+
+    // Phone auth verifies the app with a silent push (real devices) or reCAPTCHA (fallback).
+    // A SwiftUI app has to hand those to Firebase explicitly.
+
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        guard FirebaseApp.app() != nil else { return }
+        Auth.auth().setAPNSToken(deviceToken, type: .unknown)
+    }
+
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        if FirebaseApp.app() != nil, Auth.auth().canHandleNotification(userInfo) {
+            completionHandler(.noData)
+            return
+        }
+        completionHandler(.noData)
+    }
+
+    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+        FirebaseApp.app() != nil && Auth.auth().canHandle(url)
     }
 }
 
