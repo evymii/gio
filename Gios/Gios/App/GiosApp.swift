@@ -50,6 +50,7 @@ struct GiosApp: App {
                 .environment(env)
                 .tint(Theme.Colors.yellow)
                 .preferredColorScheme(.dark)
+                .task { env.remote.start() }
         }
     }
 }

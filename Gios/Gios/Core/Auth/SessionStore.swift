@@ -41,10 +41,12 @@ final class SessionStore {
 
     func login(email: String, password: String) async throws {
         try await finish(api.login(email: email, password: password))
+        Telemetry.log(.login(method: "email", isNew: false))
     }
 
     func signup(name: String, email: String, password: String) async throws {
         try await finish(api.signup(name: name, email: email, password: password))
+        Telemetry.log(.login(method: "email", isNew: true))
     }
 
     /// Phone sign-in: Firebase verified the number; Gapi turns that into a session.
@@ -52,6 +54,7 @@ final class SessionStore {
         let auth = try await api.firebaseLogin(idToken: idToken)
         needsProfile = auth.isNew == true
         await finish(auth)
+        Telemetry.log(.login(method: "phone", isNew: needsProfile))
     }
 
     private func finish(_ auth: AuthResponse) async {

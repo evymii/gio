@@ -65,10 +65,11 @@ struct CampusMapView: View {
         .task {
             while !Task.isCancelled {
                 await load()
-                try? await Task.sleep(for: .seconds(30))
+                try? await Task.sleep(for: .seconds(env.remote.mapRefreshSeconds))
             }
         }
         .onChange(of: env.location.location == nil) { _, isNil in if !isNil { Task { await load() } } }
+        .onAppear { Telemetry.log(.mapOpen(spots: spots.count, friendsOnline: onlineCount)) }
         .errorAlert("Couldn't load the map", message: $error)
     }
 
@@ -96,9 +97,9 @@ struct CampusMapView: View {
         do {
             async let f = env.api.friendLocations()
             if let center {
-                spots = try await env.api.nearbySpots(at: center, radius: 3000)
+                spots = try await env.api.nearbySpots(at: center, radius: env.remote.mapSpotRadiusMeters)
             } else if let pos = try await env.api.dashboard(at: nil).position {
-                spots = try await env.api.nearbySpots(at: pos.coordinate, radius: 3000)
+                spots = try await env.api.nearbySpots(at: pos.coordinate, radius: env.remote.mapSpotRadiusMeters)
                 position = .region(MKCoordinateRegion(center: pos.coordinate, latitudinalMeters: 1200, longitudinalMeters: 1200))
             }
             friends = try await f

@@ -10,6 +10,8 @@ final class AppEnvironment {
     let api: APIClient
     let session: SessionStore
     let location: LocationService
+    /// Firebase Remote Config values (banner, map refresh, …).
+    let remote = RemoteSettings()
     @ObservationIgnored private let sharer: LocationSharer
 
     init(config: AppConfig = AppConfig(), tokens: TokenStore = TokenStore()) {
@@ -28,6 +30,7 @@ final class AppEnvironment {
 
     /// Call after login / profile changes: starts location + sharing as appropriate.
     func didSignIn() async {
+        Telemetry.identify(userId: session.me?.id)
         location.start()
         sharer.isEnabled = session.me?.isSharing ?? false
         if let loc = location.location { sharer.handle(loc) }
@@ -41,6 +44,7 @@ final class AppEnvironment {
     }
 
     func signOut() async {
+        Telemetry.identify(userId: nil)
         sharer.isEnabled = false
         location.stop()
         await session.logout()

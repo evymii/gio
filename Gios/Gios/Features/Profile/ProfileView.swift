@@ -26,6 +26,13 @@ struct ProfileView: View {
                 server
                 Button("Log out") { confirmLogout = true }
                     .buttonStyle(PillButtonStyle(fill: Theme.Colors.red))
+                #if DEBUG
+                // Crashlytics check: crashes on purpose. Relaunch the app and the report shows up in
+                // Firebase console → Crashlytics within a few minutes (run without the Xcode debugger attached).
+                Button("Test crash (Crashlytics)") { fatalError("Crashlytics test crash") }
+                    .font(Theme.Fonts.micro).foregroundStyle(Theme.Colors.textSecondary)
+                    .frame(maxWidth: .infinity)
+                #endif
             }
             .padding(Theme.Spacing.m)
             .padding(.bottom, Theme.Spacing.xl)

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Home: level, progress arc, event, nearby spots (stacked cards), quests (pills), friends, rank.
+/// Home: level, progress arc, announcement banner (Remote Config), nearby spots (stacked cards), quests (pills), friends, rank.
 struct DashboardView: View {
     @Environment(AppEnvironment.self) private var env
     @Environment(\.selectTab) private var selectTab
@@ -42,6 +42,7 @@ struct DashboardView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 30) {
                 header(d).appear()
+                if !env.remote.homeBanner.isEmpty { banner(env.remote.homeBanner).appear(delay: 0.02) }
                 today(d).appear(delay: 0.04)
                 statTiles(d).appear(delay: 0.08)
                 actions.appear(delay: 0.1)
@@ -71,6 +72,18 @@ struct DashboardView: View {
                 .buttonStyle(PressableStyle())
                 .accessibilityLabel("Profile")
         }
+    }
+
+    /// Announcement set from Firebase Remote Config (`home_banner`).
+    private func banner(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            LineBadge(icon: "megaphone.fill", color: Theme.Colors.ink, size: 40, foreground: Theme.Colors.yellow)
+            Text(text).font(Theme.Fonts.bold(17)).foregroundStyle(Theme.Colors.ink)
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .background(Theme.Colors.yellow, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .accessibilityElement(children: .combine)
     }
 
     /// "Today" sentence built from live data.

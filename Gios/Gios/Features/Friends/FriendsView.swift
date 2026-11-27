@@ -105,7 +105,7 @@ struct FriendsView: View {
                         }
                         .accessibilityLabel("Decline \(item.user.name)")
                         CircleButton(systemName: "checkmark", size: 46, fill: Theme.Colors.ink, foreground: Theme.Colors.yellow) {
-                            Task { await act(item.friendshipId) { try await env.api.acceptFriend(item.friendshipId) } }
+                            Task { await act(item.friendshipId) { try await env.api.acceptFriend(item.friendshipId); Telemetry.log(.friendAccept) } }
                         }
                         .accessibilityLabel("Accept \(item.user.name)")
                     }
@@ -198,6 +198,7 @@ struct FriendsView: View {
     private func add(_ u: PublicUser) async {
         do {
             try await env.api.sendFriendRequest(to: u.id)
+            Telemetry.log(.friendRequest)
             sentTo.insert(u.id)
             await load()
         } catch { self.error = error.localizedDescription }

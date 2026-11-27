@@ -22,6 +22,26 @@ targets:
     dependencies:
       - package: Firebase
         product: FirebaseAuth
+      - package: Firebase
+        product: FirebaseAnalytics
+      - package: Firebase
+        product: FirebaseRemoteConfig
+      - package: Firebase
+        product: FirebaseCrashlytics
+    postBuildScripts:
+      # Uploads debug symbols so Crashlytics can show the exact Swift line of a crash.
+      - name: Crashlytics dSYM upload
+        basedOnDependencyAnalysis: false
+        script: |
+          if [ -f "${PROJECT_DIR}/Gios/Resources/GoogleService-Info.plist" ]; then
+            "${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run"
+          fi
+        inputFiles:
+          - ${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}
+          - ${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}
+          - ${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist
+          - $(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist
+          - $(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.campusgame.gios
@@ -30,6 +50,9 @@ targets:
         ENABLE_PREVIEWS: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        # Crashlytics needs dSYMs (Debug too, so simulator test crashes are readable) and an unsandboxed upload script.
+        DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
       configs:
         # Where the app talks to Gapi: the deployed API on Render (free tier sleeps; first request can take ~50 s).
         Debug:
@@ -66,6 +89,10 @@ schemes:
       targets:
         Gios: all
         GiosTests: [test]
+    run:
+      # Analytics DebugView: events from Debug runs show up live in the Firebase console.
+      commandLineArguments:
+        "-FIRDebugEnabled": true
     test:
       targets:
         - GiosTests

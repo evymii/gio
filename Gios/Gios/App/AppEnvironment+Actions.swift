@@ -10,12 +10,16 @@ extension AppEnvironment {
     func checkIn(_ spot: Spot) async throws -> CheckinResult {
         guard let here = location.location else { throw CheckinError.noLocation }
         let result = try await api.checkIn(spotId: spot.id, at: here)
+        Telemetry.log(.checkIn(spotType: spot.type, verified: result.checkin.verified, xp: result.checkin.xpAwarded))
+        if let u = result.user, u.leveledUp { Telemetry.log(.levelUp(level: u.level)) }
         if result.checkin.verified { await session.refreshMe() }
         return result
     }
 
     func claim(_ quest: Quest) async throws -> ClaimResult {
         let result = try await api.claimQuest(quest.id)
+        Telemetry.log(.questClaim(quest: quest.slug, xp: result.xpAwarded))
+        if result.user.leveledUp { Telemetry.log(.levelUp(level: result.user.level)) }
         await session.refreshMe()
         return result
     }

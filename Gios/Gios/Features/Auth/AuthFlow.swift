@@ -37,6 +37,7 @@ struct AuthFlow: View {
 }
 
 struct WelcomeView: View {
+    @Environment(AppEnvironment.self) private var env
     var go: (AuthFlow.Route) -> Void
 
     var body: some View {
@@ -49,7 +50,9 @@ struct WelcomeView: View {
                     .appear(delay: 0.4)
                 VStack(spacing: 12) {
                     Button("Continue with phone") { go(.phone) }.buttonStyle(PillButtonStyle(fill: .white))
-                    Button("Sign in with email") { go(.login) }.buttonStyle(PillButtonStyle(outlined: true))
+                    if env.remote.emailLoginEnabled {
+                        Button("Sign in with email") { go(.login) }.buttonStyle(PillButtonStyle(outlined: true))
+                    }
                 }
                 .appear(delay: 0.5)
             }
