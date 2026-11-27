@@ -26,6 +26,12 @@
 				<string>app-1-760780070218-ios-601877eca2943d7b8935b3</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>gios</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>

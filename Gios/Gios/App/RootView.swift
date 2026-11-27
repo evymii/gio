@@ -57,6 +57,10 @@ struct RootView: View {
         .onChange(of: "\(env.session.me?.id ?? "")|\(env.session.needsProfile)", initial: true) {
             InAppMessages.update(signedIn: env.session.me != nil, onboarding: env.session.needsProfile)
         }
+        .onOpenURL { url in
+            if PhoneAuth.canHandle(url) { return } // reCAPTCHA return from phone sign-in
+            if url.scheme == "gios", let tab = MainTabView.Tab(link: url.host() ?? "") { env.requestedTab = tab }
+        }
         .onChange(of: env.session.me?.id) { _, id in
             if id != nil { Task { await env.didSignIn() } }
         }

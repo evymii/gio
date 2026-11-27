@@ -74,6 +74,8 @@ targets:
         # ("app-" + GOOGLE_APP_ID with ":" → "-", from GoogleService-Info.plist).
         CFBundleURLTypes:
           - CFBundleURLSchemes: [app-1-760780070218-ios-601877eca2943d7b8935b3]
+          # Deep links (e.g. In-App Messaging buttons): gios://home | map | friends | profile
+          - CFBundleURLSchemes: [gios]
   GiosTests:
     type: bundle.unit-test
     platform: iOS

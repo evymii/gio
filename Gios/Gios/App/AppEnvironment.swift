@@ -12,6 +12,8 @@ final class AppEnvironment {
     let location: LocationService
     /// Firebase Remote Config values (banner, map refresh, …).
     let remote = RemoteSettings()
+    /// Set by a deep link (gios://map …); MainTabView switches to it.
+    var requestedTab: MainTabView.Tab?
     @ObservationIgnored private let sharer: LocationSharer
 
     init(config: AppConfig = AppConfig(), tokens: TokenStore = TokenStore()) {

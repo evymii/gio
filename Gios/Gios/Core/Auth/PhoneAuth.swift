@@ -32,6 +32,11 @@ enum PhoneAuth {
         return try await result.user.getIDToken()
     }
 
+    /// SwiftUI receives URLs in the scene, so Firebase's reCAPTCHA return link is passed on from here.
+    static func canHandle(_ url: URL) -> Bool {
+        FirebaseApp.app() != nil && Auth.auth().canHandle(url)
+    }
+
     static func signOut() {
         guard FirebaseApp.app() != nil else { return }
         try? Auth.auth().signOut()

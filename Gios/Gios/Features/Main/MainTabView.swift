@@ -12,6 +12,16 @@ struct MainTabView: View {
             case .profile: "person.crop.circle.fill"
             }
         }
+        /// Deep-link name: gios://home, gios://map, gios://friends, gios://profile
+        init?(link: String) {
+            switch link.lowercased() {
+            case "home": self = .home
+            case "map": self = .map
+            case "friends": self = .friends
+            case "profile": self = .profile
+            default: return nil
+            }
+        }
         var title: String {
             switch self {
             case .home: "Home"
@@ -22,6 +32,7 @@ struct MainTabView: View {
         }
     }
 
+    @Environment(AppEnvironment.self) private var env
     @State private var tab: Tab = Tab(rawValue: MainTabView.initialTab) ?? .home
     @State private var direction: Edge = .trailing
 
@@ -47,6 +58,11 @@ struct MainTabView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) { bar }
         .background(Theme.Colors.background.ignoresSafeArea())
         .environment(\.selectTab, { select($0) })
+        .onChange(of: env.requestedTab, initial: true) { _, t in
+            guard let t else { return }
+            select(t)
+            env.requestedTab = nil
+        }
     }
 
     @ViewBuilder private func page(_ t: Tab) -> some View {
