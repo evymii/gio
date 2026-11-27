@@ -24,18 +24,17 @@ struct ProfileView: View {
                 Card { DotCalendar(month: .now, counts: counts) }.appear(delay: 0.15)
                 links
                 server
-                Button("Log out") { confirmLogout = true }
-                    .buttonStyle(PillButtonStyle(fill: Theme.Colors.red))
                 #if DEBUG
-                // Crashlytics check: crashes on purpose. Relaunch the app and the report shows up in
+                // Crashlytics check: crashes on purpose. Reopen the app and the report shows up in
                 // Firebase console → Crashlytics within a few minutes (run without the Xcode debugger attached).
                 Button("Test crash (Crashlytics)") { fatalError("Crashlytics test crash") }
-                    .font(Theme.Fonts.micro).foregroundStyle(Theme.Colors.textSecondary)
-                    .frame(maxWidth: .infinity)
+                    .buttonStyle(PillButtonStyle(outlined: true))
                 #endif
+                Button("Log out") { confirmLogout = true }
+                    .buttonStyle(PillButtonStyle(fill: Theme.Colors.red))
             }
             .padding(Theme.Spacing.m)
-            .padding(.bottom, Theme.Spacing.xl)
+            .padding(.bottom, 110) // clear the floating tab bar
         }
         .scrollIndicators(.hidden)
         .pageBackground()
